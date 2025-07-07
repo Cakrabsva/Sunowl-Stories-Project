@@ -81,3 +81,7 @@ SETUP EXPRESS JS
         > ... etc
     > touch app.js
         > initiation express, app, and route
+
+2. create all controllers static and integrate with routes
+    > create all controllers static
+    > integrate with routes 
