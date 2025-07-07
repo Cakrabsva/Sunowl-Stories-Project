@@ -1,3 +1,5 @@
+CONFIGURE SERVER AND DATABASE
+
 1. Setting up and installing module
     - npm init -y
     - npm i express
@@ -62,5 +64,20 @@
 
 7. Indexing on field you usually use for querry
 
-7. Create your table:
+8. Create your table:
     > npx sequelize-cli db:migrate
+
+SETUP EXPRESS JS
+
+1. Create root app file
+    > mkdir routes
+        > index.js
+        > touch userRouter.js
+        > touch profileRouter.js
+        > ... etc
+    > mkdir controllers
+        > userController.js
+        > profileController.js
+        > ... etc
+    > touch app.js
+        > initiation express, app, and route
