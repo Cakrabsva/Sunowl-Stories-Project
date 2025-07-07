@@ -85,3 +85,10 @@ SETUP EXPRESS JS
 2. create all controllers static and integrate with routes
     > create all controllers static
     > integrate with routes 
+
+3. setUp helpers
+    > mkdir helper
+        > create javascript file, containing bcrypt function
+        > create javasript file for errorHandler
+
+4. Finish Register
