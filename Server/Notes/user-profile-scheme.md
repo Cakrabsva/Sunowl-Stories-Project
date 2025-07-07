@@ -6,7 +6,7 @@
     - is_admin (Boolean = false)
     - is_active (Boolean = false)
     - is_verified: (Boolean = false)
-    - username_changeAt(Date, allow null)
+    - username_updatedAt(Date, allow null)
     - update_token (Integer = 5)
     - createdAt (date)
     - updatedAt (date) 
