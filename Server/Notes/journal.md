@@ -54,3 +54,13 @@
     > npx sequelize db:create
 
 4. Create you Models
+    > see at migrationsSceleton
+
+5. Setting again your association FK reference in migration
+
+6. Setting your association between models, and stup models validate
+
+7. Indexing on field you usually use for querry
+
+7. Create your table:
+    > npx sequelize-cli db:migrate
