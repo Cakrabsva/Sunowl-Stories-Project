@@ -4,7 +4,7 @@ const router = require('express').Router()
 const UserController = require('../controllers/UsersController')
 
 router.post('/register', UserController.register)
-router.get('/login', UserController.login)
+router.post('/login', UserController.login)
 router.get('/:id', UserController.getUser)
 router.get('/:id/change-email', UserController.changeEmail)
 router.get('/:id/change-password', UserController.changePassword)
