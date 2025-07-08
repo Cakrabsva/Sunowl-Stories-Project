@@ -43,7 +43,20 @@ describe('POST /register', () => {
       });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toMatch(/username must be unique/i);
+    expect(res.body.message).toMatch(/Username already exist!/i);
+    });
+
+    test('❌ should fail if username is empty', async () => {
+    const res = await request(app)
+      .post('/user/register')
+      .send({
+        username: '',
+        email: 'cakra@example123.com',
+        password: 'password123'
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Please insert your username/i);
     });
 
     test('❌ should fail if email already exists', async () => {
@@ -51,12 +64,12 @@ describe('POST /register', () => {
       .post('/user/register')
       .send({
         username: 'cakraduplicate',
-        email: 'cakra@example.com', // email sudah terdaftar dari test sebelumnya
+        email: 'cakra@example.com',
         password: 'password123'
       });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toMatch(/email must be unique/i);
+    expect(res.body.message).toMatch(/Email already exist!/i);
     });
 
     test('❌ should fail if email is empty', async () => {
@@ -69,6 +82,45 @@ describe('POST /register', () => {
       });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.message).toMatch(/email/i); // bisa diganti tergantung pesan validasinya
+    expect(res.body.message).toMatch(/email/i);
+    });
+
+    test('❌ should fail if email is incorrect email format', async () => {
+    const res = await request(app)
+      .post('/user/register')
+      .send({
+        username: 'cakra',
+        email: 'cakra.example.com',
+        password: 'password123'
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/invalid email format/i);
+    });
+
+    test('❌ should fail if password is empty', async () => {
+    const res = await request(app)
+      .post('/user/register')
+      .send({
+        username: 'cakrabsva',
+        email: 'cakra@example123.com',
+        password: ''
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Please insert your password/i);
+    });
+
+    test('❌ should fail if password less than 8 character', async () => {
+    const res = await request(app)
+      .post('/user/register')
+      .send({
+        username: 'cakrabsva',
+        email: 'cakra@example123.com',
+        password: 'jono'
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Password minimum 8 character/i);
     });
 });
