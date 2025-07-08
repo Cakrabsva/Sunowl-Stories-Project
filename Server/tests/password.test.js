@@ -1,11 +1,11 @@
-const { hashPassword, comparePassword } = require('../helpers/hashPassword');
+const { Password } = require('../helpers/Password');
 
 describe('Password Helper Functions', () => {
   const plainPassword = 'Sunowl1811';
   let hashedPassword;
 
   test('hashPassword should return a hashed string', () => {
-    hashedPassword = hashPassword(plainPassword);
+    hashedPassword = Password.hashPassword(plainPassword);
     
     expect(typeof hashedPassword).toBe('string');
     expect(hashedPassword).not.toBe(plainPassword); 
@@ -13,13 +13,13 @@ describe('Password Helper Functions', () => {
   });
 
   test('comparePassword should return true for matching password', () => {
-    const result = comparePassword(plainPassword, hashedPassword);
+    const result = Password.comparePassword(plainPassword, hashedPassword);
     expect(result).toBe(true);
   });
 
   test('comparePassword should return false for incorrect password', () => {
     const wrongPassword = 'Wrong123';
-    const result = comparePassword(wrongPassword, hashedPassword);
+    const result = Password.comparePassword(wrongPassword, hashedPassword);
     expect(result).toBe(false);
   });
 });

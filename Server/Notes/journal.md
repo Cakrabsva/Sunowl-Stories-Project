@@ -101,3 +101,16 @@ SETUP EXPRESS JS
         > answer the question based on your need, no need coverage
     > mkdir test
         > user.test.js
+6. Finish test post register
+
+7. Finish hashPassword function test
+    >  touch hashPassword.test.js
+
+8. Test function for JWT create Token
+    > touch jwt.js in helper
+        > create the function
+    > Describe function and test the function
+
+9. Create test skeleton for post Login
+    > describe post login in user.test.js
+        > create all possible test and expect
