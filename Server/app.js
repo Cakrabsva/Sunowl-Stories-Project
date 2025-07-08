@@ -8,8 +8,7 @@ const router = require('./routes')
 const app = expreess()
 const port = 3000
 
+app.use(expreess.urlencoded({extended:true}))
 app.use(router)
 
-app.listen(port, () => {
-    console.log(`app running in port ${port}`)
-})
+module.exports = app

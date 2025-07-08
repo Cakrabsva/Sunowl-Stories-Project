@@ -1,9 +1,9 @@
 'use strict'
 
 const router = require('express').Router()
-const UserController = require('../controllers/usersController')
+const UserController = require('../controllers/UsersController')
 
-router.get('/register', UserController.register)
+router.post('/register', UserController.register)
 router.get('/login', UserController.login)
 router.get('/:id', UserController.getUser)
 router.get('/:id/change-email', UserController.changeEmail)

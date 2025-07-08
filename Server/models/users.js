@@ -2,6 +2,7 @@
 const {
   Model
 } = require('sequelize');
+const { hashPassword } = require('../helpers/hashPassword');
 module.exports = (sequelize, DataTypes) => {
   class Users extends Model {
     /**
@@ -20,17 +21,21 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Users.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      allowNull: false
+    },
     username: {
       type: DataTypes.STRING,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     }, 
     email: {
       type: DataTypes.STRING,
       validate: {
-        notNull: true,
         notEmpty: true,
         isEmail: true
       }
@@ -38,7 +43,6 @@ module.exports = (sequelize, DataTypes) => {
     password: {
       type: DataTypes.STRING,
       validate: {
-        notNull: true,
         notEmpty: true,
         len: {
           args: [8,20],
@@ -49,41 +53,41 @@ module.exports = (sequelize, DataTypes) => {
     is_admin: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     is_active: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     is_verified: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     username_updatedAt: {
       type: DataTypes.DATE,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     update_token: {
       type: DataTypes.INTEGER,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
   }, {
     sequelize,
     modelName: 'Users',
+    hooks: {
+      beforeCreate: (instance, option) => {
+        instance.password = hashPassword(instance.password)
+      }
+    }
   });
   return Users;
 };

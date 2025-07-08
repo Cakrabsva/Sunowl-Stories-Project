@@ -92,3 +92,5 @@ SETUP EXPRESS JS
         > create javasript file for errorHandler
 
 4. Finish Register
+    > create hooks before create for hashing password before insert to database
+    > create register functions
