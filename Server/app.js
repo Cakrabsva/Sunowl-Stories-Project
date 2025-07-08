@@ -2,13 +2,16 @@
 
 require('dotenv').configDotenv()
 
-const expreess = require('express')
+const express = require('express')
 const router = require('./routes')
+const errorHandler = require('./helpers/errorHandler')
 
-const app = expreess()
-const port = 3000
+const app = express()
+const port = process.env.PORT
 
-app.use(expreess.urlencoded({extended:true}))
+// app.use(express.urlencoded({extended:true}))
+app.use(express.json());
 app.use(router)
+app.use(errorHandler)
 
-module.exports = app
+module.exports = {app, port}

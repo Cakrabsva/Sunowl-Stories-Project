@@ -94,3 +94,10 @@ SETUP EXPRESS JS
 4. Finish Register
     > create hooks before create for hashing password before insert to database
     > create register functions
+
+5. Create test with jest and supertest
+    > npm install --save-dev jest supertest
+    > npm init jest@latest
+        > answer the question based on your need, no need coverage
+    > mkdir test
+        > user.test.js

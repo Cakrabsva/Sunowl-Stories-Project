@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         isUrl: true
       }
     },
-    UserId: DataTypes.INTEGER
+    UserId: DataTypes.UUID
   }, {
     sequelize,
     modelName: 'Profiles',

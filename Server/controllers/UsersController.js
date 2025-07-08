@@ -3,17 +3,15 @@
 const {Users, Profiles} = require('../models')
 
 class UserController {
-
+    
     static async register (req, res, next) {
         const {username, email, password} = req.body
-
         try {
             const user = await Users.create({username, email, password})
             if (user) await Profiles.create({UserId:user.id})
-
             res.status(201).json({'Message': 'Sucessfully Register'})
         } catch (err) {
-            console.log(err)
+            console.log(err.name)
             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
