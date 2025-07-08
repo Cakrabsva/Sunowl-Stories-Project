@@ -45,7 +45,7 @@ class UserController {
             }
 
             const accessToken = Jwt.getToken({id: user.id})
-            res.status(201).json({message:'Login Success', token: accessToken, id: user.id})
+            res.status(201).json({message:'Login Success', token: accessToken, username: user.username})
 
         } catch (err) {
             next(err)
@@ -54,9 +54,15 @@ class UserController {
 
     static async getUser (req, res, next) {
         try {
-            res.send('Masuk di User')
+            const {username} = req.params
+            const user = await Users.findOne({where:{username}, include:[{model:Profiles}]})
+            if(!user) {
+                next({name: 'Not Found', message:"User not Found"})
+                return
+            }
+            res.status(201).json(user)
         } catch (err) {
-            console.log(err)
+            next(err)
         }
     }
 
@@ -101,6 +107,7 @@ class UserController {
             console.log(err)
         }
     }
+// change admin role
 
  }
 

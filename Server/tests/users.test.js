@@ -147,9 +147,9 @@ describe('POST /login', () => {
     expect(checkingPassword).toBe(true)
     expect(typeof accessToken).toBe('string')
     expect(res.statusCode).toBe(201)
-    expect(res.body).toMatchObject({message:'Login Success',token: accessToken, id: user.id})
+    expect(res.body).toMatchObject({message:'Login Success',token: accessToken, username: user.username})
   })
-  
+
   test('❌ should fail if username empty', async () => {
 
     const username =''
@@ -216,4 +216,31 @@ describe('POST /login', () => {
     expect(res.body.message).toMatch(/Incorrect Password!/i)
   })
 
+})
+
+describe('GET /:username', () => {
+  test('✅ should return user data', async () => {
+    const username = 'cakrabsva'
+    const res = await request(app)
+      .get(`/user/${username}`)
+    
+    const user = await Users.findOne({ where: { username }, include: [{ model: Profiles }] })
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.username).toBe(user.username)
+    expect(res.body.email).toBe(user.email)
+    expect(res.body.Profile).toBeDefined()
+    expect(res.body.Profile.UserId).toBe(user.id)
+  })
+
+  test('❌ should fail if username not in database', async() => {
+    const username = 'cakrabsvaaa'
+    const res = await request(app)
+      .get(`/user/${username}`)
+    
+    const user = await Users.findOne({ where: { username }, include: [{ model: Profiles }] })
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User not found/i)
+  })
 })

@@ -114,3 +114,8 @@ SETUP EXPRESS JS
 9. Create test skeleton for post Login
     > describe post login in user.test.js
         > create all possible test and expect
+
+10. crete test skeleton to get user and finis getuser
+    > describe get user
+        > Create all possible test and expect
+            > finish function get user

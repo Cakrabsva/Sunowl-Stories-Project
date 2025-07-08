@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Users.hasOne(models.Profiles, {
         foreignKey: 'UserId',
-        as: 'profile',
         onDelete:'CASCADE',
         onUpdate: 'CASCADE'
       });
