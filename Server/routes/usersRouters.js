@@ -1,13 +1,13 @@
 'use strict'
 
 const router = require('express').Router()
-const UserController = require('../controllers/usersController')
+const UserController = require('../controllers/UsersController')
 
-router.get('/register', UserController.register)
-router.get('/login', UserController.login)
-router.get('/:id', UserController.getUser)
-router.get('/:id/change-email', UserController.changeEmail)
-router.get('/:id/change-password', UserController.changePassword)
+router.post('/register', UserController.register)
+router.post('/login', UserController.login)
+router.get('/:username', UserController.getUser)
+router.get('/:username/change-email', UserController.changeEmail)
+router.get('/:username/change-password', UserController.changePassword)
 
 /* Only Admin */
 router.get('/get-all', UserController.getAllUsers)

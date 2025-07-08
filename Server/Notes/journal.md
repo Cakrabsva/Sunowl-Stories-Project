@@ -85,3 +85,37 @@ SETUP EXPRESS JS
 2. create all controllers static and integrate with routes
     > create all controllers static
     > integrate with routes 
+
+3. setUp helpers
+    > mkdir helper
+        > create javascript file, containing bcrypt function
+        > create javasript file for errorHandler
+
+4. Finish Register
+    > create hooks before create for hashing password before insert to database
+    > create register functions
+
+5. Create test with jest and supertest
+    > npm install --save-dev jest supertest
+    > npm init jest@latest
+        > answer the question based on your need, no need coverage
+    > mkdir test
+        > user.test.js
+6. Finish test post register
+
+7. Finish hashPassword function test
+    >  touch hashPassword.test.js
+
+8. Test function for JWT create Token
+    > touch jwt.js in helper
+        > create the function
+    > Describe function and test the function
+
+9. Create test skeleton for post Login
+    > describe post login in user.test.js
+        > create all possible test and expect
+
+10. crete test skeleton to get user and finis getuser
+    > describe get user
+        > Create all possible test and expect
+            > finish function get user

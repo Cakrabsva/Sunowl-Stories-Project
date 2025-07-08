@@ -2,6 +2,7 @@
 const {
   Model
 } = require('sequelize');
+const { Password } = require('../helpers/Password');
 module.exports = (sequelize, DataTypes) => {
   class Users extends Model {
     /**
@@ -13,35 +14,60 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Users.hasOne(models.Profiles, {
         foreignKey: 'UserId',
-        as: 'profile',
         onDelete:'CASCADE',
         onUpdate: 'CASCADE'
       });
     }
   }
   Users.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      allowNull: false
+    },
     username: {
       type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        args: true,
+        msg: 'Username already exist!'
+      },
       validate: {
-        notNull: true,
-        notEmpty: true
+        notEmpty: {
+          args: true,
+          msg: 'Please insert your username'
+        },
       }
     }, 
     email: {
       type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        args: true,
+        msg: 'Email already exist!'
+      },
       validate: {
-        notNull: true,
-        notEmpty: true,
-        isEmail: true
+        notEmpty: {
+          args: true,
+          msg: 'Please insert your email'
+        },
+        isEmail: {
+          args: true,
+          msg: 'Invalid email format'
+        }
       }
     }, 
     password: {
       type: DataTypes.STRING,
+      allowNull: false,
       validate: {
-        notNull: true,
-        notEmpty: true,
+        notEmpty: {
+          args: true,
+          msg: 'Please insert your password'
+        },
         len: {
-          args: [8,20],
+          args: [8],
           msg: 'Password minimum 8 characters'
         }
       }
@@ -49,41 +75,41 @@ module.exports = (sequelize, DataTypes) => {
     is_admin: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     is_active: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     is_verified: {
       type: DataTypes.BOOLEAN,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     username_updatedAt: {
       type: DataTypes.DATE,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
     update_token: {
       type: DataTypes.INTEGER,
       validate: {
-        notNull: true,
         notEmpty: true
       }
     },
   }, {
     sequelize,
     modelName: 'Users',
+    hooks: {
+      beforeCreate: (instance, option) => {
+        instance.password = Password.hashPassword(instance.password)
+      }
+    }
   });
   return Users;
 };

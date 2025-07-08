@@ -13,13 +13,18 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Profiles.belongsTo(models.Users, {
         foreignKey: 'UserId',
-        as: 'user',
         onDelete:'CASCADE',
         onUpdate: 'CASCADE'
       })
     }
   }
   Profiles.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      allowNull: false
+    },
     first_name: DataTypes.STRING,
     last_name: DataTypes.STRING,
     bio: DataTypes.TEXT,
@@ -36,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
         isUrl: true
       }
     },
-    UserId: DataTypes.INTEGER
+    UserId: DataTypes.UUID
   }, {
     sequelize,
     modelName: 'Profiles',
