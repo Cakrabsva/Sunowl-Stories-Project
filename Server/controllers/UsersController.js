@@ -68,9 +68,32 @@ class UserController {
 
     static async changeEmail (req, res, next) {
         try {
-            res.send('Masuk di Change email')
+            const {username} = req.params
+            const {email} = req.body
+
+            if(!email) {
+                next({name: "Bad Request", message: 'Insert your new email!'})
+                return
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if(!emailRegex.test(email)) {
+                next({name: "Bad Request", message:'Invalid email format!'})
+            }
+
+            const user = await Users.findOne({where: {email}})
+            if(user) {
+                next({name: "Conflict", message: 'Email already used'})
+                return
+            }
+
+            await Users.update(email, {
+                where: {
+                    username
+                }
+            })
+            res.status(201).json({message: 'Email Updated Successfully'})
         } catch (err) {
-            console.log(err)
+            next(err)
         }
     }
 

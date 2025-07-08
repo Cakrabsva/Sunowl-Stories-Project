@@ -162,7 +162,7 @@ describe('POST /login', () => {
         password
       })
 
-    expect(res.statusCode).toBe(401)
+    expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Please insert username or password!/i)
   })
 
@@ -194,7 +194,7 @@ describe('POST /login', () => {
         password
       })
 
-    expect(res.statusCode).toBe(401)
+    expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Please insert username or password!/i)
   })
 
@@ -212,7 +212,7 @@ describe('POST /login', () => {
     const checkingPassword = Password.comparePassword(password, user.password)
     
     expect(checkingPassword).toBe(false)
-    expect(res.statusCode).toBe(401)
+    expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Incorrect Password!/i)
   })
 
@@ -243,4 +243,70 @@ describe('GET /:username', () => {
     expect(res.statusCode).toBe(404)
     expect(res.body.message).toMatch(/User not found/i)
   })
+})
+
+describe('POST /:username/change-email', () => {
+  
+  test('✅ should return update email user', async() => {
+    const username = 'cakrabsva'
+    const email = 'cakrabilisairo.va@gmail.com'
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+
+    const checkingEmail = await Users.findOne({
+      where: {email}
+    })
+    
+    await Users.update({email}, {
+      where: {
+        username
+      }
+    })
+    const user = await Users.findOne({where:{username}})
+
+    expect(checkingEmail).toBeNull()
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/Email Updated Successfully/i)
+    expect(user.email).toBe(email)
+  })
+
+  test('❌ should fail if email is empty', async () => {
+    const username = 'cakrabsva'
+    const email = ''
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insert your new email!/i)
+  })
+
+  test('❌ should fail if email already used', async () => {
+    const username = 'cakrabsva'
+    const email = 'cakrabilisairo.va@gmail.com'
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+
+    const checkingEmail = await Users.findOne({
+      where: {email}
+    })
+
+    expect(res.statusCode).toBe(409)
+    expect(res.body.message).toMatch(/Email already used/i)
+     expect(checkingEmail).toBeDefined()
+  })
+
+  test('❌ should fail if invalid email format', async () => {
+    const username = 'cakrabsva'
+    const email = 'cakraexample123.com'
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid email format!/i)
+  })
+
 })
