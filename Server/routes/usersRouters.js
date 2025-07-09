@@ -7,7 +7,7 @@ router.post('/register', UserController.register)
 router.post('/login', UserController.login)
 router.get('/:username', UserController.getUser)
 router.post('/:username/change-email', UserController.changeEmail)
-router.get('/:username/change-password', UserController.changePassword)
+router.post('/:username/change-password', UserController.changePassword)
 
 /* Only Admin */
 router.get('/get-all', UserController.getAllUsers)

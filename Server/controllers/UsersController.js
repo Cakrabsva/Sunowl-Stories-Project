@@ -9,7 +9,7 @@ class UserController {
     static async register (req, res, next) {
         const {username, email, password} = req.body
         try {
-            const user = await Users.create({username, email, password})
+            const user = await Users.create({username, email, password, is_active:true})
             if (user) await Profiles.create({UserId:user.id})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
@@ -86,7 +86,7 @@ class UserController {
                 return
             }
 
-            await Users.update(email, {
+            await Users.update({email}, {
                 where: {
                     username
                 }
@@ -99,9 +99,47 @@ class UserController {
 
     static async changePassword (req, res, next) {
         try {
-            res.send('Masuk di Change Password')
+            const {username} = req.params
+            const {oldPassword, newPassword, newPassword2} = req.body
+            if (!oldPassword || !newPassword || !newPassword2) {
+                next({name: 'Bad Request', message:'Please insert your password'})
+                return
+            }
+
+            if (newPassword !== newPassword2) {
+                next({name: 'Bad Request', message: 'Password should be identic'})
+                return
+            }
+
+            const user = await Users.findOne({
+                where: {username}
+            })
+            
+            if(!user) {
+                next({name: "Not Found", message: 'User Not Found'})
+                return
+            }
+
+            const checkingPassword = Password.comparePassword(oldPassword, user.password)
+            if(!checkingPassword) {
+                next({name: 'Bad Request', message: 'Incorrect Password'})
+                return
+            }
+
+            const comparePassword = oldPassword === newPassword
+            if(comparePassword) {
+                next({name: 'Bad Request', message:'You make no difference'})
+                return
+            }
+
+            await Users.update({password: newPassword}, {
+                where: {username},
+                individualHooks: true
+            })
+            res.status(201).json({message: 'Password Updated Successfully!'})
+       
         } catch (err) {
-            console.log(err)
+            next(err)
         }
     }
 
