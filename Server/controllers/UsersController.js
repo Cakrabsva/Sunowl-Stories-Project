@@ -217,6 +217,7 @@ class UserController {
                 return
             }
             //applying update > decreasing update token -1
+            
             await Users.update({
                 username:newUsername, 
                 username_updatedAt:new Date(), 
@@ -224,6 +225,9 @@ class UserController {
             }, {
                 where: {username}
             })
+
+            const jojo = await Users.findOne({where:{username:'cakrabs'}})
+            console.log(jojo)
 
             res.status(201).json({message: 'Username Successfully Updated!'})
 
