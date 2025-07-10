@@ -87,9 +87,14 @@ class UserController {
             }
 
             const user = await Users.findOne({where:{username}})
-    
             if(user.update_token <= 0) {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
+                return
+            }
+
+            const verifiedUser = user.is_verified
+            if(!verifiedUser) {
+                next({name: 'Bad Request', message: 'Verify your email first'})
                 return
             }
     
@@ -150,6 +155,13 @@ class UserController {
                 return
             }
 
+            //checking verified user
+            const verifiedUser = user.is_verified
+            if(!verifiedUser) {
+                next({name: 'Bad Request', message: 'Verify your email first'})
+                return
+            }
+
             //Updating process
             await Users.update({password: newPassword, update_token:user.update_token-1}, {
                 where: {username},
@@ -175,6 +187,12 @@ class UserController {
             const user = await Users.findOne({where:{username}})
             if(!user) {
                 next({name: 'Not Found', message: 'User Not Found'})
+            }
+            //checking verified user
+            const verifiedUser = user.is_verified
+            if(!verifiedUser) {
+                next({name: 'Bad Request', message: 'Verify your email first'})
+                return
             }
             //checking token
             const tokenValidity = user.update_token

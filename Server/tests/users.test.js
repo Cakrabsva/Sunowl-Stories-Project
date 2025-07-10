@@ -278,6 +278,36 @@ describe('GET /:username', () => {
 
 //CHANGE EMAIL=====================================
 describe('POST /:username/change-email', () => {
+  test('❌ should fail user not verified', async () => {
+    const username = 'cakrabsva'
+    const email = 'cakrabilisairo.va@gmail.com'
+    await Users.update({is_verified:false}, {where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Verify your email first/i)
+
+    await Users.update({is_verified:true}, {where:{username}})
+  })
+
+  test('❌ should fail if insufficient update token', async () => {
+    const username = 'cakrabsva'
+    const email = 'cakrabilisairo.va@gmail.com'
+    await Users.update({update_token:0},{where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-email`)
+      .send({email})
+    
+    const user = await Users.findOne({where:{username}})
+
+    expect(user.update_token).toEqual(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+
+    await Users.update({update_token:4},{where:{username}})
+  })
   
   test('✅ should return updated email user', async() => {
     const username = 'cakrabsva'
@@ -326,15 +356,6 @@ describe('POST /:username/change-email', () => {
     expect(res.body.message).toMatch(/Invalid email format!/i)
   })
 
-  // test('❌ should fail if insufficient update token', async () => {
-  //   const username = 'cakrabsva'
-  //   const user = await Users.findOne({where:{username}})
-
-  //   expect(user.update_token).toEqual(0)
-  //   expect(res.statusCode).toBe(400)
-  //   expect(res.body.message).toMatch(/Insufficient Update Token!/i)
-  // })
-
 })
 
 // CHANGE PASSWORD=====================================
@@ -365,6 +386,40 @@ describe('POST /:username/change-password', () => {
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/You make no difference/i)
   })
+
+  test('❌ should fail user not verified', async () => {
+    const username = 'cakrabsva'
+    const oldPassword = 'Sunowl1811'
+    const newPassword = 'Pastisukses1811'
+    const newPassword2 = 'Pastisukses1811'
+    await Users.update({is_verified:false}, {where:{username}})
+    const res = await request(app)
+    .post(`/user/${username}/change-password`)
+    .send({newPassword,oldPassword, newPassword2})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Verify your email first/i)
+
+    await Users.update({is_verified:true}, {where:{username}})
+  })
+
+  test('❌ should fail if insufficient update token', async () => {
+     const username = 'cakrabsva'
+    const oldPassword = 'Sunowl1811'
+    const newPassword = 'Pastisukses1811'
+    const newPassword2 = 'Pastisukses1811'
+    await Users.update({update_token:0},{where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-password`)
+      .send({oldPassword, newPassword, newPassword2})
+    const user = await Users.findOne({where: {username}})
+
+    expect(user.update_token).toBe(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+
+    await Users.update({update_token:4},{where:{username}})
+  })
   
   test('✅ should return updated password user', async () => {
     const username = 'cakrabsva'
@@ -384,17 +439,6 @@ describe('POST /:username/change-password', () => {
     expect(res.body.message).toMatch(/Password Updated Successfully!/i)
     expect(Password.comparePassword(newPassword, newUser.password)).toBeTruthy()
   })
-
-  // test('❌ should fail if insufficient update token', async () => {
-  //   const username = 'cakrabsva'
-  //   const user = await Users.findOne({
-  //     where: {username}
-  //   })
-
-  //   expect(user.update_token).toBe(0)
-  //   expect(res.statusCode).toBe(400)
-  //   expect(res.body.message).toMatch(/Insufficient Update Token!/i)
-  // })
 
   test('❌ should fail if user not found', async () => {
     const username = 'cakrabsvaaaa'
@@ -503,6 +547,37 @@ describe('POST /:username/change-username', () => {
     expect(res.body.message).toMatch(/Incorrect Password!/i)
   })
 
+  test('❌ should fail user not verified', async () => {
+    const username ='cakrabsva'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    await Users.update({is_verified:false}, {where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Verify your email first/i)
+
+    await Users.update({is_verified:true}, {where:{username}})
+  })
+
+  test('❌ should fail if iInsufficient Update Token!', async()=> {
+    const username ='cakrabsva'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    await Users.update({update_token:0},{where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+    const user = await Users.findOne({where:{username}})
+
+    expect(user.update_token).toEqual(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+    await Users.update({update_token:4},{where:{username}})
+  })
+
   test('✅ it should return updated username', async () => {
     const username ='cakrabsva'
     const newUsername = 'cakrabs'
@@ -517,19 +592,7 @@ describe('POST /:username/change-username', () => {
     expect(res.body.message).toMatch(/Username Successfully Updated/i)
   })
 
-  // test('❌ should fail if iInsufficient Update Token!', async()=> {
-  //   const username = 'cakrabs'
-  //   const newUsername = 'cakrabs'
-  //   const password ='Pastisukses1811'
-  //   const user = await Users.findOne({where:{username}})
-  //   const res = await request(app)
-  //     .post(`/user/${username}/change-username`)
-  //     .send({newUsername, password})
 
-  //   expect(user.update_token).toEqual(0)
-  //   expect(res.statusCode).toBe(400)
-  //   expect(res.body.message).toMatch(/Insufficient Update Token!/i)
-  // })
 
   test('❌ should fail if username updatedAt less than 30 days', async()=> {
     const username = 'cakrabs'
