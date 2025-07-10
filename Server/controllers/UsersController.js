@@ -1,6 +1,7 @@
 'use strict'
 
 const { Jwt } = require('../helpers/Jasonwebtoken')
+const { MyDate } = require('../helpers/MyDate')
 const { Password } = require('../helpers/Password')
 const {Users, Profiles} = require('../models')
 
@@ -160,7 +161,62 @@ class UserController {
             next(err)
         }
     }
-    //Chaange is verified
+
+    static async changeUsername (req, res, next) {
+        try {
+            const {username} = req.params
+            const {newUsername, password} = req.body
+            //conditioning if req.body is undefined
+            if (!newUsername) {
+                next({name: 'Bad Request', message:'New username cannot empty'})
+                return
+            }
+            //checking availability user
+            const user = await Users.findOne({where:{username}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+            }
+            //checking token
+            const tokenValidity = user.update_token
+            if(tokenValidity <= 0) {
+                next({name:'Bad Request', message:'Insufficient Update Token!'})
+                return
+            }
+            //checking lastUpdated username
+            if(user.username_updatedAt) {
+                const today = MyDate.formateDate(new Date())
+                const usernameUpdatedAt = MyDate.formateDate(user.username_updatedAt)
+                const usernameUpdatedAtValidity = MyDate.transformDate(today) - MyDate.transformDate(usernameUpdatedAt)
+                if(usernameUpdatedAtValidity < 30) {
+                    next({name: 'Bad request', message: `You can change username in ${30 - usernameUpdatedAtValidity} days more`})
+                    return
+                } 
+            }
+            //checking password
+            console.log(password)
+            const checkingPassword = Password.comparePassword(password, user.password)
+            if(!checkingPassword) {
+                next({name: 'Bad Request', message: 'Incorrect Password!'})
+                return
+            }
+            //applying update > decreasing update token -1
+            console.log({username:newUsername,username_updatedAt:new Date(), 
+                update_token: user.update_token-1})
+            await Users.update({
+                username:newUsername, 
+                username_updatedAt:new Date(), 
+                update_token: user.update_token-1
+            }, {
+                where: {username}
+            })
+
+            res.status(201).json({message: 'Username Successfully Updated!'})
+
+        } catch(err) {
+            next(err)
+        }
+    }
+    //Change is verified
     //Update token every day
 
 /* ONLY ADMIN */

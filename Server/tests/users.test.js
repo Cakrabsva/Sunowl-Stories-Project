@@ -3,6 +3,7 @@ const {app} = require('../app')
 const { sequelize, Users, Profiles } = require('../models');
 const { Password } = require('../helpers/Password');
 const { Jwt } = require('../helpers/Jasonwebtoken');
+const { MyDate } = require('../helpers/MyDate');
 
 beforeAll(async () => {
     try {
@@ -300,7 +301,7 @@ describe('POST /:username/change-email', () => {
     expect(res.body.message).toMatch(/Invalid email format!/i)
   })
 
-  test('❌ should fail if token is 0', async () => {
+  test('❌ should fail if insufficient update token', async () => {
     const username = 'cakrabsva'
     const user = await Users.findOne({where:{username}})
 
@@ -359,7 +360,7 @@ describe('POST /:username/change-password', () => {
     expect(Password.comparePassword(newPassword, newUser.password)).toBeTruthy()
   })
 
-  test('❌ should fail if token is 0', async () => {
+  test('❌ should fail if insufficient update token', async () => {
     const username = 'cakrabsva'
     const user = await Users.findOne({
       where: {username}
@@ -435,4 +436,83 @@ describe('POST /:username/change-password', () => {
     expect(res.body.message).toMatch(/Please insert your password/i)
   })
 
+})
+
+//CHANGE USERNAME
+describe('POST /:username/change-username', () => {
+
+  test('❌ should fail if new username is empty', async()=> {
+    const username = 'cakrabsva'
+    const newUsername = ''
+    const password ='Pastisukses1811'
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/New username cannot empty/i)
+  })
+
+  test('❌ should fail if user notfound', async()=> {
+    const username = 'cakrabsvava'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
+
+  test('❌ should fail if Incorrect Password', async()=> {
+    const username = 'cakrabsva'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses181112'
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Incorrect Password!/i)
+  })
+
+  test('✅ it should return updated username', async () => {
+    const username ='cakrabsva'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    const user = await Users.findOne({where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(user.update_token).toBeGreaterThan(0)
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/Username Successfully Updated/i)
+  })
+
+  test('❌ should fail if iInsufficient Update Token!', async()=> {
+    const username = 'cakrabs'
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    const user = await Users.findOne({where:{username}})
+    const res = await request(app)
+      .post(`/user/${username}/change-username`)
+      .send({newUsername, password})
+
+    expect(user.update_token).toEqual(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+  })
+
+  test('❌ should fail if username updatedAt less than 30 days', async()=> {
+    const username = 'cakrabs'
+    const user = await Users.findOne({where:{username}})
+    const today = MyDate.formateDate(new Date())
+    const usernameUpdatedAt = MyDate.formateDate(user.username_updatedAt)
+    const usernameUpdatedAtValidity = MyDate.transformDate(today) - MyDate.transformDate(usernameUpdatedAt)
+
+    expect(usernameUpdatedAtValidity).toBeLessThan(30)//defined here
+  })
 })
