@@ -193,15 +193,12 @@ class UserController {
                 } 
             }
             //checking password
-            console.log(password)
             const checkingPassword = Password.comparePassword(password, user.password)
             if(!checkingPassword) {
                 next({name: 'Bad Request', message: 'Incorrect Password!'})
                 return
             }
             //applying update > decreasing update token -1
-            console.log({username:newUsername,username_updatedAt:new Date(), 
-                update_token: user.update_token-1})
             await Users.update({
                 username:newUsername, 
                 username_updatedAt:new Date(), 
@@ -216,8 +213,32 @@ class UserController {
             next(err)
         }
     }
-    //Change is verified
-    //Update token every day
+
+    static async verifyUser (req, res, next) {
+        try {
+            const {username} = req.params
+
+            await Users.update({is_verified:true}, {
+                where: {username}
+            })
+            res.status(201).json({message: 'Verifying User Successfully'})
+
+        } catch (err) {
+            next(err)
+        }
+    }
+    
+    static async updateToken (req, res, next) {
+        try {
+            const {username} = req.body
+            await Users.update({update_token:5}, {
+                where: {username}
+            })
+            res.status(201).json({message: 'Token Updated'})
+        } catch (err) {
+            next(err)
+        }
+    }
 
 /* ONLY ADMIN */
 

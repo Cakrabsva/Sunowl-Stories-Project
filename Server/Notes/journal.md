@@ -125,3 +125,5 @@ SETUP EXPRESS JS
 13. adding more testing to change-email and change-password
     > adding decreasing update_token testing every success update
 14. adding more end point for change-username
+15. finish teting api chance username
+16. adding end point for is verified
