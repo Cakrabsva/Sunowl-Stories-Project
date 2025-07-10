@@ -43,6 +43,7 @@ module.exports = (sequelize, DataTypes) => {
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      isEmail: true,
       unique: {
         args: true,
         msg: 'Email already exist!'
@@ -74,18 +75,21 @@ module.exports = (sequelize, DataTypes) => {
     },
     is_admin: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
     },
     is_active: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
     },
     is_verified: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
@@ -98,8 +102,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     update_token: {
       type: DataTypes.INTEGER,
+      defaultValue: 5,
       validate: {
-        notEmpty: true
+        notEmpty: false
       }
     },
   }, {
@@ -108,7 +113,10 @@ module.exports = (sequelize, DataTypes) => {
     hooks: {
       beforeCreate: (instance, option) => {
         instance.password = Password.hashPassword(instance.password)
-      }
+      },
+      beforeUpdate: (instance) => {
+        instance.password = Password.hashPassword(instance.password)
+      },
     }
   });
   return Users;

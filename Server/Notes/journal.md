@@ -119,3 +119,13 @@ SETUP EXPRESS JS
     > describe get user
         > Create all possible test and expect
             > finish function get user
+
+11. finish tetsting post change-email
+12. Finish testing post change-password
+13. adding more testing to change-email and change-password
+    > adding decreasing update_token testing every success update
+14. adding more end point for change-username
+15. finish teting api chance username
+16. adding end point for is verified
+17. finish all user role end ponit and testing
+18.

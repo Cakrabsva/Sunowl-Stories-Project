@@ -4,11 +4,12 @@ function errorHandler (err, req, res, next) {
     switch(err.name) {
         case "SequelizeValidationError":
             case "SequelizeUniqueConstraintError":
-                return res.status(400).json({message: err.message})
+                case "Bad Request":
+                    return res.status(400).json({message: err.message})
         case "Not Found":
             return res.status(404).json({message: err.message})
-        case "Bad Request":
-            return res.status(401).json({message: err.message})
+        case "Conflict":
+            return res.status(409).json({message: err.message})
         default:
             res.status(500).json({ message: 'Internal Server Error' }); 
     }
