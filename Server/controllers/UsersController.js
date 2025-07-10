@@ -70,7 +70,6 @@ class UserController {
         try {
             const {username} = req.params
             const {email} = req.body
-
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
                 return
@@ -80,17 +79,25 @@ class UserController {
                 next({name: "Bad Request", message:'Invalid email format!'})
             }
 
-            const user = await Users.findOne({where: {email}})
-            if(user) {
+            const checkingEmail = await Users.findOne({where: {email}})
+            if(checkingEmail) {
                 next({name: "Conflict", message: 'Email already used'})
                 return
             }
 
-            await Users.update({email}, {
+            const user = await Users.findOne({where:{username}})
+    
+            if(user.update_token <= 0) {
+                next({name: "Bad Request", message: "Insufficient Update Token!"})
+                return
+            }
+    
+            await Users.update({email, update_token:user.update_token-1}, {
                 where: {
                     username
-                }
+                },
             })
+            
             res.status(201).json({message: 'Email Updated Successfully'})
         } catch (err) {
             next(err)
@@ -101,11 +108,12 @@ class UserController {
         try {
             const {username} = req.params
             const {oldPassword, newPassword, newPassword2} = req.body
+            //Make sure all the password defined
             if (!oldPassword || !newPassword || !newPassword2) {
                 next({name: 'Bad Request', message:'Please insert your password'})
                 return
             }
-
+            //checking typo new password
             if (newPassword !== newPassword2) {
                 next({name: 'Bad Request', message: 'Password should be identic'})
                 return
@@ -114,25 +122,35 @@ class UserController {
             const user = await Users.findOne({
                 where: {username}
             })
-            
+
+            //Checking user's data in database
             if(!user) {
                 next({name: "Not Found", message: 'User Not Found'})
                 return
             }
 
+            //Checking password to make sure real user that make a change
             const checkingPassword = Password.comparePassword(oldPassword, user.password)
             if(!checkingPassword) {
                 next({name: 'Bad Request', message: 'Incorrect Password'})
                 return
             }
 
+            //Checking new password should not identic with old password
             const comparePassword = oldPassword === newPassword
             if(comparePassword) {
                 next({name: 'Bad Request', message:'You make no difference'})
                 return
             }
 
-            await Users.update({password: newPassword}, {
+            // checking availability of token
+            if(user.update_token <= 0) {
+                next({name: "Bad Request", message: "Insufficient Update Token!"})
+                return
+            }
+
+            //Updating process
+            await Users.update({password: newPassword, update_token:user.update_token-1}, {
                 where: {username},
                 individualHooks: true
             })
@@ -142,6 +160,8 @@ class UserController {
             next(err)
         }
     }
+    //Chaange is verified
+    //Update token every day
 
 /* ONLY ADMIN */
 

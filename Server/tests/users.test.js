@@ -256,15 +256,12 @@ describe('POST /:username/change-email', () => {
   test('✅ should return updated email user', async() => {
     const username = 'cakrabsva'
     const email = 'cakrabilisairo.va@gmail.com'
-    const checkingEmail = await Users.findOne({
-        where: {email}
-      })
     const res = await request(app)
       .post(`/user/${username}/change-email`)
       .send({email})
     const user = await Users.findOne({where:{username}})
-
-    expect(checkingEmail).toBeNull()
+ 
+    expect(user.update_token).toBeLessThan(5)
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/Email Updated Successfully/i)
     expect(user.email).toBe(email)
@@ -288,13 +285,8 @@ describe('POST /:username/change-email', () => {
       .post(`/user/${username}/change-email`)
       .send({email})
 
-    const checkingEmail = await Users.findOne({
-      where: {email}
-    })
-
     expect(res.statusCode).toBe(409)
     expect(res.body.message).toMatch(/Email already used/i)
-     expect(checkingEmail).toBeDefined()
   })
 
   test('❌ should fail if invalid email format', async () => {
@@ -308,6 +300,15 @@ describe('POST /:username/change-email', () => {
     expect(res.body.message).toMatch(/Invalid email format!/i)
   })
 
+  test('❌ should fail if token is 0', async () => {
+    const username = 'cakrabsva'
+    const user = await Users.findOne({where:{username}})
+
+    expect(user.update_token).toEqual(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+  })
+
 })
 
 // CHANGE PASSWORD=====================================
@@ -315,54 +316,35 @@ describe('POST /:username/change-password', () => {
 
   test('❌ should fail if typo on typing password', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Sunowl1811'
-    const makeSureTyping = newPassword===newPassword2
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword,oldPassword,newPassword2})
 
-    expect(makeSureTyping).toBeFalsy()
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Password should be identic/i)
   })
 
   test('❌ should fail if old passwors same with new password', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Sunowl1811'
     const newPassword2 = 'Sunowl1811'
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword,oldPassword, newPassword2})
 
-    expect(comparePassword).toBeTruthy()
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/You make no difference/i)
   })
-
+  
   test('✅ should return updated password user', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const makeSureTyping = newPassword === newPassword2
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({oldPassword, newPassword, newPassword2})
@@ -371,20 +353,25 @@ describe('POST /:username/change-password', () => {
       where: {username}
     })
     
-    expect(user).toBeDefined()
-    expect(checkingPassword).toBeTruthy()
-    expect(makeSureTyping).toBeTruthy()
-    expect(comparePassword).toBeFalsy()
+    expect(newUser.update_token).toBeLessThan(4)
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/Password Updated Successfully!/i)
     expect(Password.comparePassword(newPassword, newUser.password)).toBeTruthy()
   })
 
-  test('❌ should fail if user not found', async () => {
-    const username = 'cakrabsvaaaa'
+  test('❌ should fail if token is 0', async () => {
+    const username = 'cakrabsva'
     const user = await Users.findOne({
       where: {username}
     })
+
+    expect(user.update_token).toBe(0)
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Insufficient Update Token!/i)
+  })
+
+  test('❌ should fail if user not found', async () => {
+    const username = 'cakrabsvaaaa'
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
@@ -392,21 +379,15 @@ describe('POST /:username/change-password', () => {
       .post(`/user/${username}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
       
-    expect(user).toBeNull
     expect(res.statusCode).toBe(404)
     expect(res.body.message).toMatch(/User Not Found/i)
   })
 
   test('❌ should fail if old password is empty', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = ''
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
@@ -417,33 +398,22 @@ describe('POST /:username/change-password', () => {
 
   test('❌ should fail if incorrect old password', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl181111'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
 
-    expect(checkingPassword).toBeFalsy()
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Incorrect Password/i)
   })
 
   test('❌ should fail if new Password is empty', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl1811'
     const newPassword = ''
     const newPassword2 = 'Pastisukses1811'
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
@@ -454,14 +424,9 @@ describe('POST /:username/change-password', () => {
 
   test('❌ should fail if new Password 2 is empty', async () => {
     const username = 'cakrabsva'
-    const user = await Users.findOne({
-      where: {username}
-    })
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = ''
-    const checkingPassword = Password.comparePassword(oldPassword, user.password)
-    const comparePassword = oldPassword === newPassword
     const res = await request(app)
       .post(`/user/${username}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
@@ -470,5 +435,4 @@ describe('POST /:username/change-password', () => {
     expect(res.body.message).toMatch(/Please insert your password/i)
   })
 
- 
 })

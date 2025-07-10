@@ -75,18 +75,21 @@ module.exports = (sequelize, DataTypes) => {
     },
     is_admin: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
     },
     is_active: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
     },
     is_verified: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       validate: {
         notEmpty: true
       }
@@ -99,8 +102,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     update_token: {
       type: DataTypes.INTEGER,
+      defaultValue: 5,
       validate: {
-        notEmpty: true
+        notEmpty: false
       }
     },
   }, {
