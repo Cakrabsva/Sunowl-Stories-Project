@@ -14,7 +14,6 @@ class UserController {
             if (user) await Profiles.create({UserId:user.id})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
-            console.log(err.name)
             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
@@ -49,7 +48,7 @@ class UserController {
             res.status(201).json({message:'Login Success', token: accessToken, username: user.username})
 
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -63,7 +62,7 @@ class UserController {
             }
             res.status(201).json(user)
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -106,7 +105,7 @@ class UserController {
             
             res.status(201).json({message: 'Email Updated Successfully'})
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -170,7 +169,7 @@ class UserController {
             res.status(201).json({message: 'Password Updated Successfully!'})
        
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -232,7 +231,7 @@ class UserController {
             res.status(201).json({message: 'Username Successfully Updated!'})
 
         } catch(err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -246,7 +245,7 @@ class UserController {
             res.status(201).json({message: 'Verifying User Successfully'})
 
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
     
@@ -258,7 +257,7 @@ class UserController {
             })
             res.status(201).json({message: 'Token Updated'})
         } catch (err) {
-            next(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
