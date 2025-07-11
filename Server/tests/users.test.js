@@ -248,31 +248,34 @@ describe('POST /login', () => {
 
 })
 
-//GETUSER=====================================
-describe('GET /:username', () => {
+//?GETUSER=====================================
+describe('GET /:id', () => {
   test('✅ should return user data', async () => {
     const username = 'cakrabsva'
-    const res = await request(app)
-      .get(`/user/${username}`)
-    
-    const user = await Users.findOne({ where: { username }, include: [{ model: Profiles }] })
+    const userData = await Users.findOne({where: {username}})
 
+    const id = userData.id
+    const res = await request(app)
+      .get(`/user/${id}`)
     expect(res.statusCode).toBe(201)
-    expect(res.body.username).toBe(user.username)
-    expect(res.body.email).toBe(user.email)
-    expect(res.body.Profile).toBeDefined()
-    expect(res.body.Profile.UserId).toBe(user.id)
+    expect(res.body.Profile.UserId).toBe(userData.id)
   })
 
-  test('❌ should fail if username not in database', async() => {
-    const username = 'cakrabsvaaa'
+  test('❌ should fail if id user not in database', async() => {
+    const id = '80d52a98-0a69-453a-94f8-6292f0c907a9'
     const res = await request(app)
-      .get(`/user/${username}`)
-    
-    const user = await Users.findOne({ where: { username }, include: [{ model: Profiles }] })
+      .get(`/user/${id}`)
 
     expect(res.statusCode).toBe(404)
     expect(res.body.message).toMatch(/User not found/i)
+  })
+  test('❌ should fail if invalid UUID', async() => {
+    const id = 'sdada'
+    const res = await request(app)
+      .get(`/user/${id}`)
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
   })
 })
 
@@ -599,5 +602,30 @@ describe('POST /:username/change-username', () => {
     const usernameUpdatedAtValidity = MyDate.transformDate(today) - MyDate.transformDate(usernameUpdatedAt)
 
     expect(usernameUpdatedAtValidity).toBeLessThan(30)//defined here
+  })
+})
+
+//!ONLY ADMIN
+//GET ALL USERS
+describe('GET /get-all', ()=> {
+  test('✅ it should return all the users in database', async () => {
+    await Users.update({is_admin:true}, {
+      where: {
+        username:'cakrabs'
+      }
+    })
+
+    await Users.create({
+      username: 'Putrira',
+      email: 'putri@example.com',
+      password: 'Sunowl1811'
+    })
+
+    const res = await request(app)
+      .get('/user/get-all')
+      .send()
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/You get all the users/i)
   })
 })

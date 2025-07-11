@@ -3,7 +3,9 @@
 const { Jwt } = require('../helpers/Jasonwebtoken')
 const { MyDate } = require('../helpers/MyDate')
 const { Password } = require('../helpers/Password')
+const validator = require('validator');
 const {Users, Profiles} = require('../models')
+
 
 class UserController {
     
@@ -11,6 +13,7 @@ class UserController {
         const {username, email, password} = req.body
         try {
             const user = await Users.create({username, email, password, is_active:true})
+            console.log(user)
             if (user) await Profiles.create({UserId:user.id})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
@@ -54,14 +57,19 @@ class UserController {
 
     static async getUser (req, res, next) {
         try {
-            const {username} = req.params
-            const user = await Users.findOne({where:{username}, include:[{model:Profiles}]})
+            const {id} = req.params
+            if (!id || !validator.isUUID(id)) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            const user = await Users.findOne({where:{id}, include:[{model:Profiles}]})
             if(!user) {
                 next({name: 'Not Found', message:"User not Found"})
                 return
             }
             res.status(201).json(user)
         } catch (err) {
+            console.log(err)
             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
@@ -225,9 +233,6 @@ class UserController {
                 where: {username}
             })
 
-            const jojo = await Users.findOne({where:{username:'cakrabs'}})
-            console.log(jojo)
-
             res.status(201).json({message: 'Username Successfully Updated!'})
 
         } catch(err) {
@@ -265,9 +270,10 @@ class UserController {
 
     static async getAllUsers (req, res, next) {
         try {
-            res.send('masuk di get all users')
+            await Users.findAll()
+            res.status(201).json({message: 'You get all the users'})
         } catch (err) {
-            console.log(err)
+            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
