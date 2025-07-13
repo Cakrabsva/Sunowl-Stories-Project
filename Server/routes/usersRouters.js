@@ -10,6 +10,7 @@ router.get('/:id', UserController.getUser)
 router.post('/:id/change-email', UserController.changeEmail)
 router.post('/:id/change-password', UserController.changePassword)
 router.post('/:id/change-username', UserController.changeUsername)
+
 router.post('/:id/verified', UserController.verifyUser)
 router.post('/:id/update-token', UserController.updateToken)
 

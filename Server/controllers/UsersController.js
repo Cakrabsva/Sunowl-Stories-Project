@@ -337,7 +337,7 @@ class UserController {
     static async changeRole (req, res, next) {
         try {
             const {id, username} = req.params
-            const {roleAdmin} = req.body
+            const {is_admin} = req.body
             //Checking UUID Validity
             if(!validator.isUUID(id) || !id) {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
@@ -355,7 +355,7 @@ class UserController {
                 return
             }
             //Updating role admin
-            await Users.update({is_admin:roleAdmin}, {
+            await Users.update({is_admin}, {
                 where: {username}
             })
             res.status(201).json({message: 'User role updated'})
