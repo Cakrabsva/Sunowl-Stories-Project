@@ -6,14 +6,12 @@ const { Password } = require('../helpers/Password')
 const validator = require('validator');
 const {Users, Profiles} = require('../models')
 
-
 class UserController {
     
     static async register (req, res, next) {
         const {username, email, password} = req.body
         try {
             const user = await Users.create({username, email, password, is_active:true})
-            console.log(user)
             if (user) await Profiles.create({UserId:user.id})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
@@ -76,7 +74,7 @@ class UserController {
 
     static async changeEmail (req, res, next) {
         try {
-            const {username} = req.params
+            const {id} = req.params
             const {email} = req.body
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
@@ -93,7 +91,7 @@ class UserController {
                 return
             }
 
-            const user = await Users.findOne({where:{username}})
+            const user = await Users.findOne({where:{id}})
             if(user.update_token <= 0) {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
@@ -107,7 +105,7 @@ class UserController {
     
             await Users.update({email, update_token:user.update_token-1}, {
                 where: {
-                    username
+                    id
                 },
             })
             
@@ -119,13 +117,20 @@ class UserController {
 
     static async changePassword (req, res, next) {
         try {
-            const {username} = req.params
+            const {id} = req.params
             const {oldPassword, newPassword, newPassword2} = req.body
             //Make sure all the password defined
             if (!oldPassword || !newPassword || !newPassword2) {
                 next({name: 'Bad Request', message:'Please insert your password'})
                 return
             }
+
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
             //checking typo new password
             if (newPassword !== newPassword2) {
                 next({name: 'Bad Request', message: 'Password should be identic'})
@@ -133,7 +138,7 @@ class UserController {
             }
 
             const user = await Users.findOne({
-                where: {username}
+                where: {id}
             })
 
             //Checking user's data in database
@@ -171,7 +176,7 @@ class UserController {
 
             //Updating process
             await Users.update({password: newPassword, update_token:user.update_token-1}, {
-                where: {username},
+                where: {id},
                 individualHooks: true
             })
             res.status(201).json({message: 'Password Updated Successfully!'})
@@ -183,17 +188,23 @@ class UserController {
 
     static async changeUsername (req, res, next) {
         try {
-            const {username} = req.params
+            const {id} = req.params
             const {newUsername, password} = req.body
             //conditioning if req.body is undefined
             if (!newUsername) {
                 next({name: 'Bad Request', message:'New username cannot empty'})
                 return
             }
+            //Checking UUID Validity
+             if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
             //checking availability user
-            const user = await Users.findOne({where:{username}})
+            const user = await Users.findOne({where:{id}})
             if(!user) {
                 next({name: 'Not Found', message: 'User Not Found'})
+                return
             }
             //checking verified user
             const verifiedUser = user.is_verified
@@ -230,7 +241,7 @@ class UserController {
                 username_updatedAt:new Date(), 
                 update_token: user.update_token-1
             }, {
-                where: {username}
+                where: {id}
             })
 
             res.status(201).json({message: 'Username Successfully Updated!'})
@@ -242,10 +253,24 @@ class UserController {
 
     static async verifyUser (req, res, next) {
         try {
-            const {username} = req.params
+            const {id} = req.params
 
+            //Checking UUID Validity
+             if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+
+            //Update process
             await Users.update({is_verified:true}, {
-                where: {username}
+                where: {id}
             })
             res.status(201).json({message: 'Verifying User Successfully'})
 
@@ -256,9 +281,23 @@ class UserController {
     
     static async updateToken (req, res, next) {
         try {
-            const {username} = req.body
+            const {id} = req.params
+             //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+
+            //Update process
             await Users.update({update_token:5}, {
-                where: {username}
+                where: {id}
             })
             res.status(201).json({message: 'Token Updated'})
         } catch (err) {
@@ -270,6 +309,24 @@ class UserController {
 
     static async getAllUsers (req, res, next) {
         try {
+            const {id} = req.params
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //Checking authority
+            if(!user.is_admin) {
+                next({name: 'Unauthorized', message: 'Unauthorized, Only Admin'})
+                return
+            }
+            //Getting data process
             await Users.findAll()
             res.status(201).json({message: 'You get all the users'})
         } catch (err) {
@@ -277,9 +334,62 @@ class UserController {
         }
     }
 
+    static async changeRole (req, res, next) {
+        try {
+            const {id, username} = req.params
+            const {roleAdmin} = req.body
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //Checking authority
+            if(!user.is_admin) {
+                next({name: 'Unauthorized', message: 'Unauthorized, Only Admin'})
+                return
+            }
+            //Updating role admin
+            await Users.update({is_admin:roleAdmin}, {
+                where: {username}
+            })
+            res.status(201).json({message: 'User role updated'})
+
+        } catch (err) {
+            console.log(err)
+             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
     static async deActivedUser (req, res, next) {
         try {
-            res.send('masuk di deactive users')
+            const {id, username} = req.params
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //Checking authority
+            if(!user.is_admin) {
+                next({name: 'Unauthorized', message: 'Unauthorized, Only Admin'})
+                return
+            }
+            //Updating Process
+            await Users.update({is_active: false}, {
+                where: {username}
+            })
+            res.status(201).json({message: 'User Deactived'})
         } catch (err) {
             console.log(err)
         }
@@ -287,13 +397,31 @@ class UserController {
 
     static async deleteUser (req, res, next) {
         try {
-            res.send('Masuk di delete user')
+             const {id, username} = req.params
+             console.log(id, username)
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || !id) {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            //Checking users in database
+            const user = await Users.findOne({where:{id}})
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //Checking authority
+            if(!user.is_admin) {
+                next({name: 'Unauthorized', message: 'Unauthorized, Only Admin'})
+                return
+            }
+
+            await Users.destroy({where:{username}})
+            res.status(201).json({message: `User has been deleted`})
         } catch (err) {
             console.log(err)
         }
     }
-// change admin role
-
  }
 
  module.exports = UserController

@@ -130,26 +130,67 @@ describe('POST /register', () => {
   });
 });
 
-// VERIFIED USER
+//VERIFIED USER=====================================
 describe('POST /:username/virified', ()=> {
+  test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const res = await request(app)
+      .post(`/user/${id}/verified`)
+
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const res = await request(app)
+      .post(`/user/${id}/verified`)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
   test('✅ it should return user verified', async () => {
     const username = 'cakrabsva'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/verified`)
-      .send({username})
+      .post(`/user/${id}/verified`)
 
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/Verifying User Successfully/i)
   })
 })
 
-// UPDATE TOKEN
+//UPDATE TOKEN=====================================
 describe('POST /:username/update-token', ()=> {
+
+  test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const res = await request(app)
+      .post(`/user/${id}/update-token`)
+
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const res = await request(app)
+      .post(`/user/${id}/update-token`)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
   test('✅ it should return updated token', async ()=> {
     const username = 'cakrabsva'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/update-token`)
-      .send({username})
+      .post(`/user/${id}/update-token`)
 
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/Token Updated/i)
@@ -248,7 +289,7 @@ describe('POST /login', () => {
 
 })
 
-//?GETUSER=====================================
+//GETUSER=====================================
 describe('GET /:id', () => {
   test('✅ should return user data', async () => {
     const username = 'cakrabsva'
@@ -280,13 +321,15 @@ describe('GET /:id', () => {
 })
 
 //CHANGE EMAIL=====================================
-describe('POST /:username/change-email', () => {
+describe('POST /:id/change-email', () => {
   test('❌ should fail user not verified', async () => {
     const username = 'cakrabsva'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const email = 'cakrabilisairo.va@gmail.com'
     await Users.update({is_verified:false}, {where:{username}})
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
 
     expect(res.statusCode).toBe(400)
@@ -298,9 +341,11 @@ describe('POST /:username/change-email', () => {
   test('❌ should fail if insufficient update token', async () => {
     const username = 'cakrabsva'
     const email = 'cakrabilisairo.va@gmail.com'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     await Users.update({update_token:0},{where:{username}})
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
     
     const user = await Users.findOne({where:{username}})
@@ -315,8 +360,10 @@ describe('POST /:username/change-email', () => {
   test('✅ should return updated email user', async() => {
     const username = 'cakrabsva'
     const email = 'cakrabilisairo.va@gmail.com'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
     const user = await Users.findOne({where:{username}})
  
@@ -329,8 +376,10 @@ describe('POST /:username/change-email', () => {
   test('❌ should fail if email is empty', async () => {
     const username = 'cakrabsva'
     const email = ''
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
 
     expect(res.statusCode).toBe(400)
@@ -340,8 +389,10 @@ describe('POST /:username/change-email', () => {
   test('❌ should fail if email already used', async () => {
     const username = 'cakrabsva'
     const email = 'cakrabilisairo.va@gmail.com'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
 
     expect(res.statusCode).toBe(409)
@@ -351,8 +402,10 @@ describe('POST /:username/change-email', () => {
   test('❌ should fail if invalid email format', async () => {
     const username = 'cakrabsva'
     const email = 'cakraexample123.com'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-email`)
+      .post(`/user/${id}/change-email`)
       .send({email})
 
     expect(res.statusCode).toBe(400)
@@ -361,16 +414,18 @@ describe('POST /:username/change-email', () => {
 
 })
 
-// CHANGE PASSWORD=====================================
-describe('POST /:username/change-password', () => {
+//CHANGE PASSWORD=====================================
+describe('POST /:id/change-password', () => {
 
   test('❌ should fail if typo on typing password', async () => {
     const username = 'cakrabsva'
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Sunowl1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({newPassword,oldPassword,newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -382,8 +437,10 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Sunowl1811'
     const newPassword2 = 'Sunowl1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({newPassword,oldPassword, newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -395,9 +452,11 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     await Users.update({is_verified:false}, {where:{username}})
     const res = await request(app)
-    .post(`/user/${username}/change-password`)
+    .post(`/user/${id}/change-password`)
     .send({newPassword,oldPassword, newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -411,9 +470,11 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     await Users.update({update_token:0},{where:{username}})
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({oldPassword, newPassword, newPassword2})
     const user = await Users.findOne({where: {username}})
 
@@ -429,8 +490,10 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({oldPassword, newPassword, newPassword2})
 
     const newUser = await Users.findOne({
@@ -443,13 +506,26 @@ describe('POST /:username/change-password', () => {
     expect(Password.comparePassword(newPassword, newUser.password)).toBeTruthy()
   })
 
-  test('❌ should fail if user not found', async () => {
-    const username = 'cakrabsvaaaa'
+  test('❌ should fail if id not valid', async () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const id = '564524564'
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
+      .send({newPassword, oldPassword, newPassword2})
+      
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+    test('❌ should fail if user not found', async () => {
+    const oldPassword = 'Sunowl1811'
+    const newPassword = 'Pastisukses1811'
+    const newPassword2 = 'Pastisukses1811'
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const res = await request(app)
+      .post(`/user/${id}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
       
     expect(res.statusCode).toBe(404)
@@ -461,8 +537,10 @@ describe('POST /:username/change-password', () => {
     const oldPassword = ''
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -474,8 +552,10 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl181111'
     const newPassword = 'Pastisukses1811'
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -487,8 +567,10 @@ describe('POST /:username/change-password', () => {
     const oldPassword = 'Sunowl1811'
     const newPassword = ''
     const newPassword2 = 'Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-password`)
+      .post(`/user/${id}/change-password`)
       .send({newPassword, oldPassword, newPassword2})
 
     expect(res.statusCode).toBe(400)
@@ -510,27 +592,42 @@ describe('POST /:username/change-password', () => {
 
 })
 
-//CHANGE USERNAME
-describe('POST /:username/change-username', () => {
+//CHANGE USERNAME=====================================
+describe('POST /:id/change-username', () => {
 
   test('❌ should fail if new username is empty', async()=> {
     const username = 'cakrabsva'
     const newUsername = ''
     const password ='Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
 
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/New username cannot empty/i)
   })
 
-  test('❌ should fail if user notfound', async()=> {
+  test('❌ should fail if invalid UUID', async()=> {
     const username = 'cakrabsvava'
     const newUsername = 'cakrabs'
     const password ='Pastisukses1811'
+    const id = '456789465'
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
+      .send({newUsername, password})
+
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const newUsername = 'cakrabs'
+    const password ='Pastisukses1811'
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const res = await request(app)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
 
     expect(res.statusCode).toBe(404)
@@ -541,8 +638,10 @@ describe('POST /:username/change-username', () => {
     const username = 'cakrabsva'
     const newUsername = 'cakrabs'
     const password ='Pastisukses181112'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
 
     expect(res.statusCode).toBe(400)
@@ -553,9 +652,11 @@ describe('POST /:username/change-username', () => {
     const username ='cakrabsva'
     const newUsername = 'cakrabs'
     const password ='Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     await Users.update({is_verified:false}, {where:{username}})
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
 
     expect(res.statusCode).toBe(400)
@@ -568,9 +669,11 @@ describe('POST /:username/change-username', () => {
     const username ='cakrabsva'
     const newUsername = 'cakrabs'
     const password ='Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     await Users.update({update_token:0},{where:{username}})
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
     const user = await Users.findOne({where:{username}})
 
@@ -584,8 +687,10 @@ describe('POST /:username/change-username', () => {
     const username ='cakrabsva'
     const newUsername = 'cakrabs'
     const password ='Pastisukses1811'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
     const res = await request(app)
-      .post(`/user/${username}/change-username`)
+      .post(`/user/${id}/change-username`)
       .send({newUsername, password})
     const user = await Users.findOne({where:{username:newUsername}})
 
@@ -606,26 +711,252 @@ describe('POST /:username/change-username', () => {
 })
 
 //!ONLY ADMIN
-//GET ALL USERS
-describe('GET /get-all', ()=> {
+//GET ALL USERS=====================================
+describe('GET /:id/get-all', ()=> {
+  test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const res = await request(app)
+      .get(`/user/${id}/get-all`)
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const res = await request(app)
+      .get(`/user/${id}/get-all`)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
+  test('❌ it should if user is not admin', async () => {
+    const username = 'cakrabs'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+    const res = await request(app)
+      .get(`/user/${id}/get-all`)
+
+    expect(res.statusCode).toBe(401)
+    expect(res.body.message).toMatch(/Unauthorized, Only Admin/i)
+  })
+
   test('✅ it should return all the users in database', async () => {
+    const username = 'cakrabs'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
     await Users.update({is_admin:true}, {
       where: {
-        username:'cakrabs'
+        username
       }
     })
 
     await Users.create({
       username: 'Putrira',
       email: 'putri@example.com',
-      password: 'Sunowl1811'
+      password: 'Sunowl1811',
+      is_active: true
     })
 
     const res = await request(app)
-      .get('/user/get-all')
-      .send()
+      .get(`/user/${id}/get-all`)
 
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/You get all the users/i)
   })
+})
+
+//CHANGE ROLE=====================================
+describe('POST /:id/:username/change-role', () => {
+
+  test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const roleAdmin = true
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/change-role`)
+      .send({roleAdmin})
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const roleAdmin = true
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/change-role`)
+      .send({roleAdmin})
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
+  test('❌ it should if user is not admin', async () => {
+    const username = 'cakrabs'
+    const roleAdmin = true
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:false}, {
+      where: {
+        username
+      }
+    })
+
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/change-role`)
+      .send({roleAdmin})
+    
+    expect(res.statusCode).toBe(401)
+    expect(res.body.message).toMatch(/Unauthorized, Only Admin/i)
+  })
+
+  test('✅ it should change users role', async () => {
+    const username = 'cakrabs'
+    const roleAdmin = true
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:true}, {
+      where: {
+        username
+      }
+    })
+
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/change-role`)
+      .send({roleAdmin})
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/User role updated/i)
+  })
+})
+
+//DEACTIVE USER STATUS=====================================
+describe('POST /:id/:username/deactived', () => {
+  test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/deactived`)
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/deactived`)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
+  test('❌ it should if user is not admin', async () => {
+    const username = 'cakrabs'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:false}, {
+      where: {
+        username
+      }
+    })
+
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/deactived`)
+    
+    expect(res.statusCode).toBe(401)
+    expect(res.body.message).toMatch(/Unauthorized, Only Admin/i)
+  })
+
+  test('✅ it should deactived users', async () => {
+    const username = 'cakrabs'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:true}, {
+      where: {
+        username
+      }
+    })
+
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/deactived`)
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/User Deactived/i)
+  })
+})
+
+//DELETE USER=====================================
+describe('POST /:id/:username/delete', ()=> {
+    test('❌ it shoud fail if invalid UUID', async () => {
+    const id = '55487654'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/delete`)
+    
+    expect(res.statusCode).toBe(400)
+    expect(res.body.message).toMatch(/Invalid or missing UUID/i)
+  })
+
+  test('❌ should fail user not found', async()=> {
+    const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/delete`)
+
+    expect(res.statusCode).toBe(404)
+    expect(res.body.message).toMatch(/User Not Found/i)
+  })
+
+  test('❌ it should if user is not admin', async () => {
+    const username = 'cakrabs'
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:false}, {
+      where: {
+        username
+      }
+    })
+
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/delete`)
+    
+    expect(res.statusCode).toBe(401)
+    expect(res.body.message).toMatch(/Unauthorized, Only Admin/i)
+  })
+
+  test('✅ it should delete users', async () => {
+    const username = 'cakrabs'
+    const userData = await Users.findOne({where: {username}})
+    const id = userData.id
+
+    await Users.update({is_admin:true}, {
+      where: {
+        username
+      }
+    })
+
+    const putri = await Users.findOne({where:{username:'Putrira'}})
+    const res = await request(app)
+      .post(`/user/${id}/${putri.username}/delete`)
+
+    expect(res.statusCode).toBe(201)
+    expect(res.body.message).toMatch(/User has been deleted/i)
+  })
+  
 })
