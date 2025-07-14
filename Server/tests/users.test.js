@@ -773,11 +773,11 @@ describe('POST /:id/:username/change-role', () => {
 
   test('❌ it shoud fail if invalid UUID', async () => {
     const id = '55487654'
-    const roleAdmin = true
+    const is_admin = true
     const putri = await Users.findOne({where:{username:'Putrira'}})
     const res = await request(app)
       .post(`/user/${id}/${putri.username}/change-role`)
-      .send({roleAdmin})
+      .send({is_admin})
     
     expect(res.statusCode).toBe(400)
     expect(res.body.message).toMatch(/Invalid or missing UUID/i)
@@ -785,11 +785,11 @@ describe('POST /:id/:username/change-role', () => {
 
   test('❌ should fail user not found', async()=> {
     const id = '4049ce9c-ba7c-4df5-91e8-58a70a294a23'
-    const roleAdmin = true
+    const is_admin = true
     const putri = await Users.findOne({where:{username:'Putrira'}})
     const res = await request(app)
       .post(`/user/${id}/${putri.username}/change-role`)
-      .send({roleAdmin})
+      .send({is_admin})
 
     expect(res.statusCode).toBe(404)
     expect(res.body.message).toMatch(/User Not Found/i)
@@ -797,7 +797,7 @@ describe('POST /:id/:username/change-role', () => {
 
   test('❌ it should if user is not admin', async () => {
     const username = 'cakrabs'
-    const roleAdmin = true
+    const is_admin = true
     const putri = await Users.findOne({where:{username:'Putrira'}})
     const userData = await Users.findOne({where: {username}})
     const id = userData.id
@@ -810,7 +810,7 @@ describe('POST /:id/:username/change-role', () => {
 
     const res = await request(app)
       .post(`/user/${id}/${putri.username}/change-role`)
-      .send({roleAdmin})
+      .send({is_admin})
     
     expect(res.statusCode).toBe(401)
     expect(res.body.message).toMatch(/Unauthorized, Only Admin/i)
@@ -818,10 +818,10 @@ describe('POST /:id/:username/change-role', () => {
 
   test('✅ it should change users role', async () => {
     const username = 'cakrabs'
-    const roleAdmin = true
+    const is_admin = true
     const userData = await Users.findOne({where: {username}})
     const id = userData.id
-
+    
     await Users.update({is_admin:true}, {
       where: {
         username
@@ -831,7 +831,7 @@ describe('POST /:id/:username/change-role', () => {
     const putri = await Users.findOne({where:{username:'Putrira'}})
     const res = await request(app)
       .post(`/user/${id}/${putri.username}/change-role`)
-      .send({roleAdmin})
+      .send({is_admin})
 
     expect(res.statusCode).toBe(201)
     expect(res.body.message).toMatch(/User role updated/i)

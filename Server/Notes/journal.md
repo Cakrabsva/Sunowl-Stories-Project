@@ -128,4 +128,6 @@ SETUP EXPRESS JS
 15. finish teting api chance username
 16. adding end point for is verified
 17. finish all user role end ponit and testing
-18.
+
+18. Create authentication and authorization
+    > touch helpers/permission.js
