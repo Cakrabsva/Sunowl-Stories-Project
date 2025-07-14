@@ -8,6 +8,8 @@ function errorHandler (err, req, res, next) {
                     return res.status(400).json({message: err.message})
         case "Unauthorized":
             return res.status(401).json({message: err.message})
+        case 'Forbidden':
+            return res.status(403).json({message: err.message})
         case "Not Found":
             return res.status(404).json({message: err.message})
         case "Conflict":

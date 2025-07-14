@@ -223,8 +223,8 @@ class UserController {
                 const today = MyDate.formateDate(new Date())
                 const usernameUpdatedAt = MyDate.formateDate(user.username_updatedAt)
                 const usernameUpdatedAtValidity = MyDate.transformDate(today) - MyDate.transformDate(usernameUpdatedAt)
-                if(usernameUpdatedAtValidity < 30) {
-                    next({name: 'Bad request', message: `You can change username in ${30 - usernameUpdatedAtValidity} days more`})
+                if(usernameUpdatedAtValidity <= 30) {
+                    next({name: 'Bad Request', message: `You can change username in ${30 - usernameUpdatedAtValidity} days more`})
                     return
                 } 
             }
@@ -327,8 +327,8 @@ class UserController {
                 return
             }
             //Getting data process
-            await Users.findAll()
-            res.status(201).json({message: 'You get all the users'})
+            const allUsers = await Users.findAll()
+            res.status(201).json({message: 'You get all the users', allUsers})
         } catch (err) {
             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
         }
