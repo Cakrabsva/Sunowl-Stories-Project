@@ -4,8 +4,9 @@ function errorHandler (err, req, res, next) {
     switch(err.name) {
         case "SequelizeValidationError":
             case "SequelizeUniqueConstraintError":
-                case "Bad Request":
-                    return res.status(400).json({message: err.message})
+                case "SequelizeDatabaseError":
+                    case "Bad Request":
+                        return res.status(400).json({message: err.message})
         case "Unauthorized":
             return res.status(401).json({message: err.message})
         case 'Forbidden':
