@@ -4,7 +4,9 @@ const { Jwt } = require('../helpers/Jasonwebtoken')
 const { MyDate } = require('../helpers/MyDate')
 const { Password } = require('../helpers/Password')
 const validator = require('validator');
-const {Users, Profiles} = require('../models')
+const {Users, Profiles} = require('../models');
+const { Checking } = require('../helpers/MyValidator');
+const { MyFunction } = require('../helpers/MyFunction');
 
 class UserController {
     
@@ -12,63 +14,77 @@ class UserController {
         const {username, email, password} = req.body
         try {
             const user = await Users.create({username, email, password, is_active:true})
-            if (user) await Profiles.create({UserId:user.id})
+            if (user) await Profiles.create({UserId:user.id, first_name:MyFunction.firstNameGenetrator(user.id)})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
     static async login (req, res, next) {
         try {
             const {username, password} = req.body
-
-            if(!username || !password) {
-                next({name: 'Bad Request', message: 'Please insert username or password!'})
+            //Checking if username defined
+            if(!username) {
+                next({name: 'Bad Request', message: 'Please insert your username!'})
                 return
             }
-
-
+            //Checking if password defined
+            if(!password) {
+                next({name: 'Bad Request', message: 'Please insert your password!'})
+                return
+            }
             const user = await Users.findOne({
-                where: {username}
+                where: {username}, 
+                include:[{model:Profiles}]
             })
-
+            //Checking registered user
             if (!user) {
                 next({name: 'Not Found', message: 'User not found, please register'})
                 return
             }
-
+            //Checking Password
             const checkingPassword = Password.comparePassword(password, user.password)
-
             if(!checkingPassword) {
                 next({name: 'Bad Request', message: 'Incorrect Password!'})
                 return
             }
-
+            //login return data
             const accessToken = Jwt.getToken({id: user.id})
-            res.status(201).json({message:'Login Success', token: accessToken, username: user.username})
+            res.status(201).json({message:'Login Success', token: accessToken, id: user.id, first_name: user.Profile.first_name})
 
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
     static async getUser (req, res, next) {
         try {
             const {id} = req.params
-            if (!id || !validator.isUUID(id)) {
+            //validating id
+            if (!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
-            const user = await Users.findOne({where:{id}, include:[{model:Profiles}]})
+            // const user = await Users.findOne({where:{id}, include:[{model:Profiles}]})
+            const user = await Checking.userValidity(id)
             if(!user) {
                 next({name: 'Not Found', message:"User not Found"})
                 return
             }
-            res.status(201).json(user)
+            res.status(200).json(user)
         } catch (err) {
             console.log(err)
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -76,42 +92,50 @@ class UserController {
         try {
             const {id} = req.params
             const {email} = req.body
+            //Check if email defined
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
                 return
             }
+            //Checking UUID Validity
+             if(!validator.isUUID(id) || id === ':id') {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+            //checking email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if(!emailRegex.test(email)) {
                 next({name: "Bad Request", message:'Invalid email format!'})
             }
-
+            //Checking unique email
             const checkingEmail = await Users.findOne({where: {email}})
             if(checkingEmail) {
                 next({name: "Conflict", message: 'Email already used'})
                 return
             }
-
-            const user = await Users.findOne({where:{id}})
+            //Checking registered user
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //Checking Token
             if(user.update_token <= 0) {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
             }
-
-            const verifiedUser = user.is_verified
-            if(!verifiedUser) {
-                next({name: 'Bad Request', message: 'Verify your email first'})
-                return
-            }
-    
+            //processing update email
             await Users.update({email, update_token:user.update_token-1}, {
                 where: {
                     id
                 },
             })
-            
             res.status(201).json({message: 'Email Updated Successfully'})
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -124,56 +148,46 @@ class UserController {
                 next({name: 'Bad Request', message:'Please insert your password'})
                 return
             }
-
             //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
 
-            //checking typo new password
+            //Checking typo new password
             if (newPassword !== newPassword2) {
                 next({name: 'Bad Request', message: 'Password should be identic'})
                 return
             }
-
-            const user = await Users.findOne({
-                where: {id}
-            })
-
-            //Checking user's data in database
+            //Checking registered user
+            const user = await Checking.userValidity(id)
             if(!user) {
                 next({name: "Not Found", message: 'User Not Found'})
                 return
             }
-
             //Checking password to make sure real user that make a change
             const checkingPassword = Password.comparePassword(oldPassword, user.password)
             if(!checkingPassword) {
                 next({name: 'Bad Request', message: 'Incorrect Password'})
                 return
             }
-
             //Checking new password should not identic with old password
             const comparePassword = oldPassword === newPassword
             if(comparePassword) {
                 next({name: 'Bad Request', message:'You make no difference'})
                 return
             }
-
             // checking availability of token
             if(user.update_token <= 0) {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
             }
-
             //checking verified user
             const verifiedUser = user.is_verified
             if(!verifiedUser) {
                 next({name: 'Bad Request', message: 'Verify your email first'})
                 return
             }
-
             //Updating process
             await Users.update({password: newPassword, update_token:user.update_token-1}, {
                 where: {id},
@@ -182,7 +196,10 @@ class UserController {
             res.status(201).json({message: 'Password Updated Successfully!'})
        
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -190,20 +207,31 @@ class UserController {
         try {
             const {id} = req.params
             const {newUsername, password} = req.body
-            //conditioning if req.body is undefined
+            //Checking if req.body is empty or ondefined
             if (!newUsername) {
                 next({name: 'Bad Request', message:'New username cannot empty'})
                 return
             }
+            //Checking if password is empty or undefined
+            if (!password) {
+                next({name: 'Bad Request', message:'Password cannot empty'})
+                return
+            }
             //Checking UUID Validity
-             if(!validator.isUUID(id) || !id) {
+             if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
             //checking availability user
-            const user = await Users.findOne({where:{id}})
+            const user = await Checking.userValidity(id)
             if(!user) {
                 next({name: 'Not Found', message: 'User Not Found'})
+                return
+            }
+            //checking username same as before
+            let oldUsername = user.username
+            if(oldUsername === newUsername) {
+                next({name: "Conflict", message: 'Username same as before'})
                 return
             }
             //checking verified user
@@ -235,7 +263,6 @@ class UserController {
                 return
             }
             //applying update > decreasing update token -1
-            
             await Users.update({
                 username:newUsername, 
                 username_updatedAt:new Date(), 
@@ -247,7 +274,10 @@ class UserController {
             res.status(201).json({message: 'Username Successfully Updated!'})
 
         } catch(err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -256,7 +286,7 @@ class UserController {
             const {id} = req.params
 
             //Checking UUID Validity
-             if(!validator.isUUID(id) || !id) {
+             if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
@@ -275,7 +305,10 @@ class UserController {
             res.status(201).json({message: 'Verifying User Successfully'})
 
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
     
@@ -283,7 +316,7 @@ class UserController {
         try {
             const {id} = req.params
              //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
@@ -301,7 +334,10 @@ class UserController {
             })
             res.status(201).json({message: 'Token Updated'})
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -311,12 +347,12 @@ class UserController {
         try {
             const {id} = req.params
             //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
             //Checking users in database
-            const user = await Users.findOne({where:{id}})
+            const user = await Checking.userValidity(id)
             if(!user) {
                 next({name: 'Not Found', message: 'User Not Found'})
                 return
@@ -330,7 +366,10 @@ class UserController {
             const allUsers = await Users.findAll()
             res.status(201).json({message: 'You get all the users', allUsers})
         } catch (err) {
-            err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -338,13 +377,30 @@ class UserController {
         try {
             const {id, username} = req.params
             const {is_admin} = req.body
+            console.log(username)
             //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
             }
+            //Checking is_admin should defined
+            if(!is_admin) {
+                next({name: 'Bad Request', message: 'admin role cannot empty' })
+                return 
+            }
+            //Conditioning username empty or undefined
+            if(username === ":username") {
+                next({name: 'Bad Request', message: 'Username cannot empty' })
+                return 
+            }
+            //Checking username registered in database
+            const usernameValidator = await Checking.userValidityByUsername(username)
+            if(!usernameValidator) {
+                next({name: 'Bad Request', message: 'Username not found'})
+                return
+            }
             //Checking users in database
-            const user = await Users.findOne({where:{id}})
+            const user = await Checking.userValidity(id)
             if(!user) {
                 next({name: 'Not Found', message: 'User Not Found'})
                 return
@@ -361,18 +417,37 @@ class UserController {
             res.status(201).json({message: 'User role updated'})
 
         } catch (err) {
-            console.log(err)
-             err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError' ? next({name: err.name, message: err.errors[0].message}) : next(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
-    static async deActivedUser (req, res, next) {
+    static async changeStatusUser (req, res, next) {
         try {
             const {id, username} = req.params
+            const {is_active} = req.body
             //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
+            }
+            //Checking is_active should defined
+            if(!is_active) {
+                next({name: 'Bad Request', message: 'user status cannot empty' })
+                return 
+            }
+            //Conditioning username empty or undefined
+            if(username === ":username") {
+                next({name: 'Bad Request', message: 'Username cannot empty' })
+                return 
+            }
+            //Checking username registered in database
+            const usernameValidator = await Checking.userValidityByUsername(username)
+            if(!usernameValidator) {
+                next({name: 'Bad Request', message: 'Username not found'})
+                return
             }
             //Checking users in database
             const user = await Users.findOne({where:{id}})
@@ -386,12 +461,15 @@ class UserController {
                 return
             }
             //Updating Process
-            await Users.update({is_active: false}, {
+            await Users.update({is_active}, {
                 where: {username}
             })
-            res.status(201).json({message: 'User Deactived'})
+            res.status(201).json({message: 'User status changed'})
         } catch (err) {
-            console.log(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
 
@@ -400,9 +478,20 @@ class UserController {
              const {id, username} = req.params
              console.log(id, username)
             //Checking UUID Validity
-            if(!validator.isUUID(id) || !id) {
+            if(!validator.isUUID(id) || id === ':id') {
                 next({name: 'Bad Request', message: 'Invalid or missing UUID' })
                 return 
+            }
+            //Conditioning username empty or undefined
+            if(username === ":username") {
+                next({name: 'Bad Request', message: 'Username cannot empty' })
+                return 
+            }
+            //Checking username registered in database
+            const usernameValidator = await Checking.userValidityByUsername(username)
+            if(!usernameValidator) {
+                next({name: 'Bad Request', message: 'Username not found'})
+                return
             }
             //Checking users in database
             const user = await Users.findOne({where:{id}})
@@ -419,7 +508,10 @@ class UserController {
             await Users.destroy({where:{username}})
             res.status(201).json({message: `User has been deleted`})
         } catch (err) {
-            console.log(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
  }
