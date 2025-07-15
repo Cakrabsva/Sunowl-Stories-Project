@@ -76,33 +76,29 @@ class UserController {
         try {
             const {id} = req.params
             const {email} = req.body
+            //Check if email defined
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
                 return
             }
+            //checking email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if(!emailRegex.test(email)) {
                 next({name: "Bad Request", message:'Invalid email format!'})
             }
-
+            //Checking unique email
             const checkingEmail = await Users.findOne({where: {email}})
             if(checkingEmail) {
                 next({name: "Conflict", message: 'Email already used'})
                 return
             }
-
+            //Checking if user registered in database
             const user = await Users.findOne({where:{id}})
             if(user.update_token <= 0) {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
             }
-
-            const verifiedUser = user.is_verified
-            if(!verifiedUser) {
-                next({name: 'Bad Request', message: 'Verify your email first'})
-                return
-            }
-    
+            //processing update email
             await Users.update({email, update_token:user.update_token-1}, {
                 where: {
                     id
