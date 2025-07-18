@@ -131,3 +131,5 @@ SETUP EXPRESS JS
 
 18. Create authentication and authorization
     > touch helpers/permission.js
+
+19. Logiun should checking either using email/username

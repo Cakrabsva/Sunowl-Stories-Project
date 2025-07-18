@@ -6,6 +6,10 @@ class MyFunction {
         let dummyFirstName = `User${sliceId}`
         return dummyFirstName
     }
+    static isValidEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+        }
 }
 
 module.exports = {MyFunction}

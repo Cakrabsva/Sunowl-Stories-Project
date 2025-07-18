@@ -6,10 +6,12 @@ const { Permission } = require('../helpers/Permission')
 
 router.post('/register', UserController.register)
 router.post('/login', UserController.login)
+router.get('/reset-password',UserController.resetPassword)
 
 router.get('/:id', UserController.getUser)
 router.post('/:id/change-email',Permission.userAuthentication, Permission.userAuthorization, UserController.changeEmail)
 router.post('/:id/change-password',Permission.userAuthentication, Permission.userAuthorization,  UserController.changePassword)
+router.post('/:id/forgot-password',UserController.forgotPassword)
 router.post('/:id/change-username',Permission.userAuthentication, Permission.userAuthorization, UserController.changeUsername)
 
 router.post('/:id/verified', UserController.verifyUser)

@@ -26,21 +26,34 @@ class UserController {
 
     static async login (req, res, next) {
         try {
-            const {username, password} = req.body
-            //Checking if username defined
-            if(!username) {
-                next({name: 'Bad Request', message: 'Please insert your username!'})
-                return
+            const { emailUsername, password} = req.body
+           //Checking if emailUsername defined
+           if(!emailUsername) {
+               next({name: 'Bad Request', message: 'Please insert your email/username!'})
+               return
             }
+
             //Checking if password defined
             if(!password) {
                 next({name: 'Bad Request', message: 'Please insert your password!'})
                 return
             }
-            const user = await Users.findOne({
-                where: {username}, 
-                include:[{model:Profiles}]
-            })
+
+            //Checking emailUsername is email or username
+            const emailValidity = MyFunction.isValidEmail(emailUsername)
+            let user
+            if(emailValidity) {
+                user = await Users.findOne({
+                    where: {email:emailUsername}, 
+                    include:[{model:Profiles}]
+                })
+            } else {
+                user = await Users.findOne({
+                    where: {username:emailUsername}, 
+                    include:[{model:Profiles}]
+                })
+            }
+
             //Checking registered user
             if (!user) {
                 next({name: 'Not Found', message: 'User not found, please register'})
@@ -103,8 +116,8 @@ class UserController {
                 return 
             }
             //checking email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if(!emailRegex.test(email)) {
+            const emailValidity = MyFunction.isValidEmail(email)
+            if(!emailValidity) {
                 next({name: "Bad Request", message:'Invalid email format!'})
             }
             //Checking unique email
@@ -333,6 +346,83 @@ class UserController {
                 where: {id}
             })
             res.status(201).json({message: 'Token Updated'})
+        } catch (err) {
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
+    static async resetPassword (req, res, next) {
+        try {
+            const {email} = req.body
+            //Checking email should be defined
+            if(!email) {
+                next({name: 'Bad Request', message: 'input your email' })
+                return 
+            }
+
+            //Checking email format validity
+            const emailValidity = MyFunction.isValidEmail(email)
+            if(!emailValidity) {
+                next({name: 'Bad Request', message: 'Invalid email format' })
+                return
+            }
+
+            const user = await Users.findOne({
+                where: {email}
+            })
+            //Checking user in database
+            if(!user) {
+                next({name: 'Not Found', message: 'Email not registered' })
+                return
+            }
+
+            res.status(200).json({message:'Email Sent', id: user.id})
+
+        } catch (err) {
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
+    static async forgotPassword (req, res, next) {
+         try {
+            const {id} = req.params
+            const { newPassword, confirmPassword } = req.body
+            //Make sure all the password defined
+            if (!newPassword || !confirmPassword) {
+                next({name: 'Bad Request', message:'Please insert your password'})
+                return
+            }
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || id === ':id') {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking typo new password
+            if (newPassword !== confirmPassword) {
+                next({name: 'Bad Request', message: 'Password should be identic'})
+                return
+            }
+            //Checking registered user
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: "Not Found", message: 'User Not Found'})
+                return
+            }
+            
+            //Updating process
+            await Users.update({password: newPassword}, {
+                where: {id},
+                individualHooks: true
+            })
+            res.status(201).json({message: 'Password Updated Successfully!'})
+       
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
