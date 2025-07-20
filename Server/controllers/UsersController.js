@@ -168,9 +168,9 @@ class UserController {
     static async changePassword (req, res, next) {
         try {
             const {id} = req.params
-            const {oldPassword, newPassword, newPassword2} = req.body
+            const {oldPassword, newPassword, confirmPassword} = req.body
             //Make sure all the password defined
-            if (!oldPassword || !newPassword || !newPassword2) {
+            if (!oldPassword || !newPassword || !confirmPassword) {
                 next({name: 'Bad Request', message:'Please insert your password'})
                 return
             }
@@ -181,7 +181,7 @@ class UserController {
             }
 
             //Checking typo new password
-            if (newPassword !== newPassword2) {
+            if (newPassword !== confirmPassword) {
                 next({name: 'Bad Request', message: 'Password should be identic'})
                 return
             }
