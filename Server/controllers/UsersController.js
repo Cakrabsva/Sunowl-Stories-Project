@@ -104,10 +104,15 @@ class UserController {
     static async changeEmail (req, res, next) {
         try {
             const {id} = req.params
-            const {email} = req.body
+            const {email, password} = req.body
             //Check if email defined
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
+                return
+            }
+            //Check if Password defined
+            if(!password) {
+                next({name: "Bad Request", message: 'Password cannot empty!'})
                 return
             }
             //Checking UUID Validity
@@ -137,6 +142,14 @@ class UserController {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
             }
+
+            //Checking Password for security
+            const checkingPassword = Password.comparePassword(password, user.password)
+            if(!checkingPassword) {
+                next({name: 'Bad Request', message: 'Incorrect Password!'})
+                return
+            }
+
             //processing update email
             await Users.update({email, update_token:user.update_token-1}, {
                 where: {
