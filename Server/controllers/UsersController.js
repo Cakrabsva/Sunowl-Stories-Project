@@ -367,7 +367,7 @@ class UserController {
         }
     }
 
-    static async resetPassword (req, res, next) {
+    static async forgotPassword (req, res, next) {
         try {
             const {email} = req.body
             //Checking email should be defined
@@ -402,7 +402,7 @@ class UserController {
         }
     }
 
-    static async forgotPassword (req, res, next) {
+    static async resetPassword (req, res, next) {
          try {
             const {id} = req.params
             const { newPassword, confirmPassword } = req.body
