@@ -104,10 +104,15 @@ class UserController {
     static async changeEmail (req, res, next) {
         try {
             const {id} = req.params
-            const {email} = req.body
+            const {email, password} = req.body
             //Check if email defined
             if(!email) {
                 next({name: "Bad Request", message: 'Insert your new email!'})
+                return
+            }
+            //Check if Password defined
+            if(!password) {
+                next({name: "Bad Request", message: 'Password cannot empty!'})
                 return
             }
             //Checking UUID Validity
@@ -137,6 +142,14 @@ class UserController {
                 next({name: "Bad Request", message: "Insufficient Update Token!"})
                 return
             }
+
+            //Checking Password for security
+            const checkingPassword = Password.comparePassword(password, user.password)
+            if(!checkingPassword) {
+                next({name: 'Bad Request', message: 'Incorrect Password!'})
+                return
+            }
+
             //processing update email
             await Users.update({email, update_token:user.update_token-1}, {
                 where: {
@@ -155,9 +168,9 @@ class UserController {
     static async changePassword (req, res, next) {
         try {
             const {id} = req.params
-            const {oldPassword, newPassword, newPassword2} = req.body
+            const {oldPassword, newPassword, confirmPassword} = req.body
             //Make sure all the password defined
-            if (!oldPassword || !newPassword || !newPassword2) {
+            if (!oldPassword || !newPassword || !confirmPassword) {
                 next({name: 'Bad Request', message:'Please insert your password'})
                 return
             }
@@ -168,7 +181,7 @@ class UserController {
             }
 
             //Checking typo new password
-            if (newPassword !== newPassword2) {
+            if (newPassword !== confirmPassword) {
                 next({name: 'Bad Request', message: 'Password should be identic'})
                 return
             }
@@ -354,7 +367,7 @@ class UserController {
         }
     }
 
-    static async resetPassword (req, res, next) {
+    static async forgotPassword (req, res, next) {
         try {
             const {email} = req.body
             //Checking email should be defined
@@ -389,7 +402,7 @@ class UserController {
         }
     }
 
-    static async forgotPassword (req, res, next) {
+    static async resetPassword (req, res, next) {
          try {
             const {id} = req.params
             const { newPassword, confirmPassword } = req.body

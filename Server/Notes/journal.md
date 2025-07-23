@@ -133,3 +133,4 @@ SETUP EXPRESS JS
     > touch helpers/permission.js
 
 19. Logiun should checking either using email/username
+20. adding Cors
