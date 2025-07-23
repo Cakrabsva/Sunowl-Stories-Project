@@ -3,10 +3,11 @@
 const { Jwt } = require('../helpers/Jasonwebtoken')
 const { MyDate } = require('../helpers/MyDate')
 const { Password } = require('../helpers/Password')
-const validator = require('validator');
-const {Users, Profiles} = require('../models');
 const { Checking } = require('../helpers/MyValidator');
 const { MyFunction } = require('../helpers/MyFunction');
+const {Users, Profiles} = require('../models');
+const validator = require('validator');
+const nodemailer = require('nodemailer');
 
 class UserController {
     
@@ -370,6 +371,7 @@ class UserController {
     static async forgotPassword (req, res, next) {
         try {
             const {email} = req.body
+            console.log(email)
             //Checking email should be defined
             if(!email) {
                 next({name: 'Bad Request', message: 'input your email' })
@@ -391,8 +393,31 @@ class UserController {
                 next({name: 'Not Found', message: 'Email not registered' })
                 return
             }
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+                }
+            });
 
-            res.status(200).json({message:'Email Sent', id: user.id})
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Reset Password Link',
+                html: `<p>Click this link to reset your password:</p>
+                    <a href="http://localhost:5173/reset-password">Reset Password</a>`
+            };
+
+            console.log('sebelum await traspoter')
+            try {
+                await transporter.sendMail(mailOptions);
+                console.log('sesudah await transpoter')
+                res.status(200).json({message:'Email Sent', id: user.id})
+            } catch (emailError) {
+                console.error('Error sending email:', emailError);
+                next({name: 'Internal Server Error', message: 'Failed to send email'});
+            }
 
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
@@ -434,7 +459,7 @@ class UserController {
                 where: {id},
                 individualHooks: true
             })
-            res.status(201).json({message: 'Password Updated Successfully!'})
+            res.status(201).json({message: 'Password Reset Successfully!'})
        
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
