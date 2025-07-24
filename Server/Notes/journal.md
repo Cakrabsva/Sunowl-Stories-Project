@@ -134,3 +134,5 @@ SETUP EXPRESS JS
 
 19. Logiun should checking either using email/username
 20. adding Cors
+21. adding nodemailer
+22. adding token_updatedAt column

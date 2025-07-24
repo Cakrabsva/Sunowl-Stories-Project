@@ -100,6 +100,12 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty: true
       }
     },
+    token_updatedAt: {
+      type: DataTypes.DATE,
+      validate: {
+        notEmpty: true
+      }
+    },
     update_token: {
       type: DataTypes.INTEGER,
       defaultValue: 5,

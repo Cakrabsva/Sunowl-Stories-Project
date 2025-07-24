@@ -355,11 +355,28 @@ class UserController {
                 return
             }
 
-            //Update process
-            await Users.update({update_token:5}, {
-                where: {id}
-            })
-            res.status(201).json({message: 'Token Updated'})
+            //Checking last update token
+            if(user.token_updatedAt) {
+                const lastUpdatedToken = MyDate.formateDate(user.token_updatedAt) 
+                const today = MyDate.formateDate(new Date())
+                const checkToken = MyDate.transformDate(today) - MyDate.transformDate(lastUpdatedToken)
+                if(checkToken >=1) {
+                    //Update process
+                    await Users.update({update_token:5, token_updatedAt:new Date()}, {
+                        where: {id}
+                    })
+                    res.status(201).json({message: 'Token Updated'})
+                } else {
+                    res.status(200).json({message: 'token will update tomorrow'})
+                }
+            } else {
+                //Update process
+                await Users.update({update_token:5, token_updatedAt:new Date()}, {
+                    where: {id}
+                })
+                res.status(201).json({message: 'Token Updated'})
+            }
+
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
@@ -406,13 +423,10 @@ class UserController {
                 to: email,
                 subject: 'Reset Password Link',
                 html: `<p>Click this link to reset your password:</p>
-                    <a href="http://localhost:5173/reset-password">Reset Password</a>`
+                    <a href="http://localhost:5173/reset-password/${user.id}">Reset Password</a>`
             };
-
-            console.log('sebelum await traspoter')
             try {
                 await transporter.sendMail(mailOptions);
-                console.log('sesudah await transpoter')
                 res.status(200).json({message:'Email Sent', id: user.id})
             } catch (emailError) {
                 console.error('Error sending email:', emailError);
