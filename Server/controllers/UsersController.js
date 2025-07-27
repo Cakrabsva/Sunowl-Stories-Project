@@ -1,12 +1,12 @@
 'use strict'
 
 const { Jwt } = require('../helpers/Jasonwebtoken')
-const { MyDate } = require('../helpers/MyDate')
-const { Password } = require('../helpers/Password')
-const { Checking } = require('../helpers/MyValidator');
-const { MyFunction } = require('../helpers/MyFunction');
-const {Users, Profiles} = require('../models');
+const MyDate = require('../helpers/MyDate')
+const Password = require('../helpers/Password')
+const Checking = require('../helpers/MyValidator');
+const MyFunction = require('../helpers/MyFunction');
 const validator = require('validator');
+const {Users, Profiles} = require('../models');
 const nodemailer = require('nodemailer');
 
 class UserController {

@@ -59,6 +59,4 @@ class Permission {
     }
 }
 
-module.exports = {
-    Permission
-}
+module.exports = Permission

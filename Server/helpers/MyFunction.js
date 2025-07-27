@@ -12,4 +12,4 @@ class MyFunction {
         }
 }
 
-module.exports = {MyFunction}
+module.exports = MyFunction

@@ -13,4 +13,4 @@ class Checking {
     }
 }
 
-module.exports = { Checking };
+module.exports = Checking

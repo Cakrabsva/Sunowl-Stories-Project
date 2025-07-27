@@ -8,6 +8,10 @@ class MyDate {
     static transformDate(date) {
         return date.replace(/-/g,'')
     }
+
+    static htmlDateReader (date) {
+        return date.toISOString().split("T")[0];
+    }
 }
 
-module.exports={MyDate}
+module.exports=MyDate
