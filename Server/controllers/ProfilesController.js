@@ -104,9 +104,9 @@ class ProfileController {
                     }
                     
                     //Checking if user already has avatar url, destroy existing 
-                    let lastProfileImgUrl = user.avatar
+                    let lastProfileImgUrl = user.Profile.avatar
                     if(lastProfileImgUrl) {
-                        let publicId = getImagePublicId (lastProfileImgUrl)
+                        let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                         cloudinary.uploader.destroy(publicId)
                     }
 
@@ -123,7 +123,7 @@ class ProfileController {
                     }, {
                         where: {id:profileId}
                     })
-                    res.status(200).json('Avatar Updated')
+                    res.status(200).json({message: 'Avatar Updated', url:cropPic})
                 }
             );
             streamifier.createReadStream(req.file.buffer).pipe(uploadStream);

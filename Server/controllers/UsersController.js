@@ -15,9 +15,10 @@ class UserController {
         const {username, email, password} = req.body
         try {
             const user = await Users.create({username, email, password, is_active:true})
-            if (user) await Profiles.create({UserId:user.id, first_name:MyFunction.firstNameGenetrator(user.id)})
+            if (user) await Profiles.create({UserId:user.id, first_name:MyFunction.firstNameGenetrator(user.id), avatar:'https://res.cloudinary.com/dkybvjiey/image/upload/v1753712593/profile_picture_replacer_r6jpaq.jpg'})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
+            console.log(err)
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
             err.name === 'SequelizeDatabaseError' ?
