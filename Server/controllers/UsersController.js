@@ -153,7 +153,7 @@ class UserController {
             }
 
             //processing update email
-            await Users.update({email, update_token:user.update_token-1}, {
+            await Users.update({email, update_token:user.update_token-1, is_verified:false}, {
                 where: {
                     id
                 },

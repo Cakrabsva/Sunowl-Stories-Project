@@ -2,7 +2,7 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const {Users, Profiles} = require('../models');
+const { Profiles} = require('../models');
 const MyFunction = require('../helpers/MyFunction');
 const streamifier = require('streamifier')
 const cloudinary = require('cloudinary').v2
@@ -34,11 +34,20 @@ class ProfileController {
                 return
             }
 
+            //Checking born date isBefore today and should more than 16 years old
+            const today = new Date ()
+            const checkingYearsOld = today.getFullYear() - new Date (born_date).getFullYear()
+            const legalYears = 16
+            if(checkingYearsOld < legalYears) {
+                next({name: "Bad Request", message: 'You must be older than 16 years old'})
+                return
+            }
+
             //Updating process
-            //Checking username is defined
+            //Checking first name is defined
             const profileId = user.Profile.id
             if(!first_name) {
-                //Checking bord_date is defined
+                //Checking born_date is defined
                 if(!born_date) {
                     await Profiles.update({first_name:firstNameGenetrator, last_name, gender, bio}, {
                         where: {id:profileId}
