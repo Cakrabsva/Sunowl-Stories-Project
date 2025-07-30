@@ -2,7 +2,7 @@
 const {
   Model
 } = require('sequelize');
-const { Password } = require('../helpers/Password');
+const Password = require('../helpers/Password');
 module.exports = (sequelize, DataTypes) => {
   class Users extends Model {
     /**
@@ -95,6 +95,12 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     username_updatedAt: {
+      type: DataTypes.DATE,
+      validate: {
+        notEmpty: true
+      }
+    },
+    token_updatedAt: {
       type: DataTypes.DATE,
       validate: {
         notEmpty: true

@@ -2,11 +2,11 @@
 
 const router = require('express').Router()
 const UserController = require('../controllers/UsersController')
-const { Permission } = require('../helpers/Permission')
+const Permission = require('../helpers/Permission')
 
 router.post('/register', UserController.register)
 router.post('/login', UserController.login)
-router.get('/forgot-password',UserController.forgotPassword)
+router.post('/forgot-password',UserController.forgotPassword)
 
 router.get('/:id', UserController.getUser)
 router.post('/:id/change-email',Permission.userAuthentication, Permission.userAuthorization, UserController.changeEmail)
@@ -14,6 +14,7 @@ router.post('/:id/change-password',Permission.userAuthentication, Permission.use
 router.post('/:id/reset-password',UserController.resetPassword)
 router.post('/:id/change-username',Permission.userAuthentication, Permission.userAuthorization, UserController.changeUsername)
 
+router.post('/:id/verify-email',Permission.userAuthentication, Permission.userAuthorization, UserController.sendingVerifyEmail)
 router.post('/:id/verified', UserController.verifyUser)
 router.post('/:id/update-token', UserController.updateToken)
 

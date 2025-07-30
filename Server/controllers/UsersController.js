@@ -1,12 +1,13 @@
 'use strict'
 
 const { Jwt } = require('../helpers/Jasonwebtoken')
-const { MyDate } = require('../helpers/MyDate')
-const { Password } = require('../helpers/Password')
+const MyDate = require('../helpers/MyDate')
+const Password = require('../helpers/Password')
+const Checking = require('../helpers/MyValidator');
+const MyFunction = require('../helpers/MyFunction');
 const validator = require('validator');
 const {Users, Profiles} = require('../models');
-const { Checking } = require('../helpers/MyValidator');
-const { MyFunction } = require('../helpers/MyFunction');
+const nodemailer = require('nodemailer');
 
 class UserController {
     
@@ -14,9 +15,10 @@ class UserController {
         const {username, email, password} = req.body
         try {
             const user = await Users.create({username, email, password, is_active:true})
-            if (user) await Profiles.create({UserId:user.id, first_name:MyFunction.firstNameGenetrator(user.id)})
+            if (user) await Profiles.create({UserId:user.id, first_name:MyFunction.firstNameGenetrator(user.id), avatar:'https://res.cloudinary.com/dkybvjiey/image/upload/v1753712593/profile_picture_replacer_r6jpaq.jpg'})
             res.status(201).json({message: 'Sucessfully Register'})
         } catch (err) {
+            console.log(err)
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
             err.name === 'SequelizeDatabaseError' ?
@@ -151,7 +153,7 @@ class UserController {
             }
 
             //processing update email
-            await Users.update({email, update_token:user.update_token-1}, {
+            await Users.update({email, update_token:user.update_token-1, is_verified:false}, {
                 where: {
                     id
                 },
@@ -337,6 +339,64 @@ class UserController {
             next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
+
+    static async sendingVerifyEmail (req, res, next) {
+        try {
+            const {id} = req.params
+            const {email} = req.body
+            console.log(email)
+            //Checking email should be defined
+            if(!email) {
+                next({name: 'Bad Request', message: 'input your email' })
+                return 
+            }
+
+            //Checking email format validity
+            const emailValidity = MyFunction.isValidEmail(email)
+            if(!emailValidity) {
+                next({name: 'Bad Request', message: 'Invalid email format' })
+                return
+            }
+
+            //Checking user in database
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: 'Not Found', message: 'User not found' })
+                return
+            }
+
+            //sending email
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+                }
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Verify User',
+                html: `<p>Click this link to verify your email:</p>
+                    <a href="http://localhost:5173/verify-email/${user.id}">Verify Account!</a>`
+            };
+            try {
+                await transporter.sendMail(mailOptions);
+                res.status(200).json({message:'Email Sent', id: user.id})
+            } catch (emailError) {
+                console.error('Error sending email:', emailError);
+                next({name: 'Internal Server Error', message: 'Failed to send email'});
+            }
+
+        } catch (err) {
+            console.log(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
     
     static async updateToken (req, res, next) {
         try {
@@ -354,11 +414,28 @@ class UserController {
                 return
             }
 
-            //Update process
-            await Users.update({update_token:5}, {
-                where: {id}
-            })
-            res.status(201).json({message: 'Token Updated'})
+            //Checking last update token
+            if(user.token_updatedAt) {
+                const lastUpdatedToken = MyDate.formateDate(user.token_updatedAt) 
+                const today = MyDate.formateDate(new Date())
+                const checkToken = MyDate.transformDate(today) - MyDate.transformDate(lastUpdatedToken)
+                if(checkToken >=1) {
+                    //Update process
+                    await Users.update({update_token:5, token_updatedAt:new Date()}, {
+                        where: {id}
+                    })
+                    res.status(201).json({message: 'Token Updated'})
+                } else {
+                    res.status(200).json({message: 'token will update tomorrow'})
+                }
+            } else {
+                //Update process
+                await Users.update({update_token:5, token_updatedAt:new Date()}, {
+                    where: {id}
+                })
+                res.status(201).json({message: 'Token Updated'})
+            }
+
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
@@ -370,6 +447,7 @@ class UserController {
     static async forgotPassword (req, res, next) {
         try {
             const {email} = req.body
+            console.log(email)
             //Checking email should be defined
             if(!email) {
                 next({name: 'Bad Request', message: 'input your email' })
@@ -391,8 +469,28 @@ class UserController {
                 next({name: 'Not Found', message: 'Email not registered' })
                 return
             }
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+                }
+            });
 
-            res.status(200).json({message:'Email Sent', id: user.id})
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Reset Password Link',
+                html: `<p>Click this link to reset your password:</p>
+                    <a href="http://localhost:5173/reset-password/${user.id}">Reset Password</a>`
+            };
+            try {
+                await transporter.sendMail(mailOptions);
+                res.status(200).json({message:'Email Sent', id: user.id})
+            } catch (emailError) {
+                console.error('Error sending email:', emailError);
+                next({name: 'Internal Server Error', message: 'Failed to send email'});
+            }
 
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
@@ -434,7 +532,7 @@ class UserController {
                 where: {id},
                 individualHooks: true
             })
-            res.status(201).json({message: 'Password Updated Successfully!'})
+            res.status(201).json({message: 'Password Reset Successfully!'})
        
         } catch (err) {
             err.name === 'SequelizeValidationError' || 

@@ -10,6 +10,13 @@ class MyFunction {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
         }
+
+    static getImagePublicId (url) {
+        const pathname = url.split('?')[0];
+        const parts = pathname.split('/');
+        const filename = parts[parts.length - 1];
+        return filename;
+    }
 }
 
-module.exports = {MyFunction}
+module.exports = MyFunction

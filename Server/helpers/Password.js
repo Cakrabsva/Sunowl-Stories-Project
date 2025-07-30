@@ -15,6 +15,4 @@ class Password {
 
 }
 
-module.exports = {
-    Password
-}
+module.exports = Password
