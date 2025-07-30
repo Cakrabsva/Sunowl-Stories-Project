@@ -339,6 +339,64 @@ class UserController {
             next({name: err.name, message: err.errors[0].message}) : next(err)
         }
     }
+
+    static async sendingVerifyEmail (req, res, next) {
+        try {
+            const {id} = req.params
+            const {email} = req.body
+            console.log(email)
+            //Checking email should be defined
+            if(!email) {
+                next({name: 'Bad Request', message: 'input your email' })
+                return 
+            }
+
+            //Checking email format validity
+            const emailValidity = MyFunction.isValidEmail(email)
+            if(!emailValidity) {
+                next({name: 'Bad Request', message: 'Invalid email format' })
+                return
+            }
+
+            //Checking user in database
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: 'Not Found', message: 'User not found' })
+                return
+            }
+
+            //sending email
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+                }
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Verify User',
+                html: `<p>Click this link to verify your email:</p>
+                    <a href="http://localhost:5173/verify-email/${user.id}">Verify Account!</a>`
+            };
+            try {
+                await transporter.sendMail(mailOptions);
+                res.status(200).json({message:'Email Sent', id: user.id})
+            } catch (emailError) {
+                console.error('Error sending email:', emailError);
+                next({name: 'Internal Server Error', message: 'Failed to send email'});
+            }
+
+        } catch (err) {
+            console.log(err)
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
     
     static async updateToken (req, res, next) {
         try {

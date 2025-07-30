@@ -2,7 +2,7 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const { Profiles} = require('../models');
+const { Profiles } = require('../models');
 const MyFunction = require('../helpers/MyFunction');
 const streamifier = require('streamifier')
 const cloudinary = require('cloudinary').v2
