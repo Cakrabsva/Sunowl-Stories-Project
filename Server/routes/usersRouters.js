@@ -14,7 +14,7 @@ router.post('/:id/change-password',Permission.userAuthentication, Permission.use
 router.post('/:id/reset-password',UserController.resetPassword)
 router.post('/:id/change-username',Permission.userAuthentication, Permission.userAuthorization, UserController.changeUsername)
 
-router.post('/:id/verify-email', UserController.sendingVerifyEmail)
+router.post('/:id/verify-email',Permission.userAuthentication, Permission.userAuthorization, UserController.sendingVerifyEmail)
 router.post('/:id/verified', UserController.verifyUser)
 router.post('/:id/update-token', UserController.updateToken)
 
