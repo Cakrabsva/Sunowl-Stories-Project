@@ -119,12 +119,19 @@ class ProfileController {
                         cloudinary.uploader.destroy(publicId)
                     }
 
-                    const cropPic = cloudinary.url(fileName   , {
-                        crop: 'auto',
-                        gravity: 'auto',
-                        width: 500,
-                        height: 500,
-                    });
+                    const cropPic = cloudinary.url(fileName,
+                        {transformation: [
+                                {
+                                    crop: 'auto',
+                                    gravity: 'auto',
+                                    width: 500,
+                                    height: 500,
+                                    format: 'auto',
+                                    quality: 'auto'
+                                }
+                            ]
+                        }, 
+                    );
                     
                     const profileId = user.Profile.id
                     await Profiles.update({
