@@ -91,7 +91,7 @@ class ProfileController {
             // Use upload_stream for buffers
             const fileName = path.parse(req.file.originalname).name
             const uploadStream = cloudinary.uploader.upload_stream(
-                { public_id: fileName }, // Options for Cloudinary upload
+                { public_id: fileName, folder:'UserAvatar' }, // Options for Cloudinary upload
                 async (error, result) => {
                     if (error) {
                         return next({name: "Bad Request", message:error}); // Pass the error to the Express error handler
@@ -105,21 +105,21 @@ class ProfileController {
                     }
 
                     //Checking registered user
-                    
                     const user = await Checking.userValidity(id)
                     if(!user) {
                         next({name: "Not Found", message: 'User Not Found'})
                         return
                     }
                     
-                    //Checking if user already has avatar url, destroy existing 
+                    // Checking if user already has avatar url, destroy existing 
                     let lastProfileImgUrl = user.Profile.avatar
+                    let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                     if(lastProfileImgUrl) {
                         let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                         cloudinary.uploader.destroy(publicId)
                     }
 
-                    const cropPic = cloudinary.url(fileName,
+                    const cropPic = cloudinary.url(result.public_id,
                         {transformation: [
                                 {
                                     crop: 'auto',
@@ -132,7 +132,7 @@ class ProfileController {
                             ]
                         }, 
                     );
-                    
+
                     const profileId = user.Profile.id
                     await Profiles.update({
                         avatar:cropPic
