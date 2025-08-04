@@ -34,7 +34,7 @@ class Permission {
             let userLoginId = req.user.id
             let idRequest = req.params.id
             if(!userLoginId || !idRequest) {
-                next({name: 'Bad Request', message: 'Misiing ID'})
+                next({name: 'Bad Request', message: 'Missing ID'})
                 return
             }
 

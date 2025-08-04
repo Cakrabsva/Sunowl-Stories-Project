@@ -19,7 +19,7 @@ router.post('/:id/verified', UserController.verifyUser)
 router.post('/:id/update-token', UserController.updateToken)
 
 //!Only Admin
-router.get('/get-all',Permission.userAuthentication, Permission.adminAuthorization, UserController.getAllUsers)
+router.get('/:id/get-all',Permission.userAuthentication, Permission.adminAuthorization, UserController.getAllUsers)
 router.post('/:id/:username/change-role',Permission.userAuthentication, Permission.adminAuthorization, UserController.changeRole)
 router.post('/:id/:username/deactived',Permission.userAuthentication, Permission.adminAuthorization, UserController.changeStatusUser)
 router.delete('/:id/:username/delete',Permission.userAuthentication, Permission.adminAuthorization, UserController.deleteUser)

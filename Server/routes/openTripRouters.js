@@ -4,9 +4,9 @@ const router = require('express').Router()
 const OpenTripController = require('../controllers/OpenTripController')
 const Permission = require('../helpers/Permission')
 
-router.get('/', OpenTripController.getAllOpenTrips)
-router.post('/create-opentrip', OpenTripController.createOpenTrip)
-router.post('/:id/delete-opentrip', OpenTripController.deleteOpenTrip)
-router.post('/:id/update-opentrip', OpenTripController.updateOpenTrip)
+router.get('/:id', Permission.userAuthentication, Permission.userAuthorization, Permission.adminAuthorization, OpenTripController.getAllOpenTrips)
+router.post('/:id/create-opentrip',Permission.userAuthentication, Permission.userAuthorization, Permission.adminAuthorization, OpenTripController.createOpenTrip)
+router.post('/:id/:tripId/update-opentrip',Permission.userAuthentication, Permission.userAuthorization, Permission.adminAuthorization, OpenTripController.updateOpenTrip)
+router.delete('/:id/:tripId/delete-opentrip',Permission.userAuthentication, Permission.userAuthorization, Permission.adminAuthorization, OpenTripController.deleteOpenTrip)
 
 module.exports = router
