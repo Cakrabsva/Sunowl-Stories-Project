@@ -91,7 +91,7 @@ class ProfileController {
             // Use upload_stream for buffers
             const fileName = path.parse(req.file.originalname).name
             const uploadStream = cloudinary.uploader.upload_stream(
-                { public_id: fileName, folder:'UserAvatar' }, // Options for Cloudinary upload
+                { public_id: fileName, folder:'UserAvatar' }, // Options for Cloudinary upload, dont forget the folder
                 async (error, result) => {
                     if (error) {
                         return next({name: "Bad Request", message:error}); // Pass the error to the Express error handler
@@ -113,13 +113,14 @@ class ProfileController {
                     
                     // Checking if user already has avatar url, destroy existing 
                     let lastProfileImgUrl = user.Profile.avatar
-                    let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                     if(lastProfileImgUrl) {
+                        //get specific public_id to delete
                         let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                         cloudinary.uploader.destroy(publicId)
                     }
 
-                    const cropPic = cloudinary.url(result.public_id,
+                    //transform image
+                    const cropPic = cloudinary.url(result.public_id, //use for get public_id
                         {transformation: [
                                 {
                                     crop: 'auto',
