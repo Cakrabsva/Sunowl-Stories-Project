@@ -2,7 +2,7 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const { OpenTrips, TripItineraries } = require('../models');
+const { OpenTrips, TripItineraries, TripReviews } = require('../models');
 
 class OpenTripController {
     static async getOneOpenTrip (req, res, next) {
@@ -22,7 +22,7 @@ class OpenTripController {
             }
 
             //Getting all open trips
-            const openTrips = await OpenTrips.findByPk(tripId, {include:[{model:TripItineraries}]})
+            const openTrips = await OpenTrips.findByPk(tripId, {include: [{model: TripItineraries}, {model: TripReviews}]})
             res.status(200).json({message: 'You get the Open Trips', data:  openTrips})
         } catch (err) {
             console.log(err)
