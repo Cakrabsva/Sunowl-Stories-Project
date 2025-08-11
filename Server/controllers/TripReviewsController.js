@@ -4,7 +4,6 @@ const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
 const { TripReviews, OpenTrips } = require('../models');
 
-
 class TripReviewController {
     static async createTripReview (req, res, next) {
         try {
