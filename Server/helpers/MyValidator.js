@@ -1,6 +1,6 @@
 'use strict';
 
-const {Users, Profiles} = require('../models');
+const {Users, Profiles, OpenTrips} = require('../models');
 
 class Checking {
     static async userValidity(id) {
@@ -9,6 +9,11 @@ class Checking {
     }
     static async userValidityByUsername(username) {
         const user = await Users.findOne({where:{username}})
+        return user
+    }
+
+    static async openTripValidityById(id) {
+        const user = await OpenTrips.findByPk(id)
         return user
     }
 }

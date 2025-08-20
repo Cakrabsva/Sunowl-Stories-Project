@@ -14,7 +14,7 @@ class MyFunction {
     static getImagePublicId (url) {
         const pathname = url.split('?')[0];
         const parts = pathname.split('/');
-        const filename = parts[parts.length - 1];
+        const filename = parts[parts.length - 2] +"/"+ parts[parts.length - 1];
         return filename;
     }
 }

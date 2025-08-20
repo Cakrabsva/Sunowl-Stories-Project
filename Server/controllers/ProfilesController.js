@@ -2,11 +2,11 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const { Profiles } = require('../models');
 const MyFunction = require('../helpers/MyFunction');
-const streamifier = require('streamifier')
 const cloudinary = require('cloudinary').v2
+const streamifier = require('streamifier')
 const path = require('path');
+const { Profiles } = require('../models');
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -91,7 +91,7 @@ class ProfileController {
             // Use upload_stream for buffers
             const fileName = path.parse(req.file.originalname).name
             const uploadStream = cloudinary.uploader.upload_stream(
-                { public_id: fileName }, // Options for Cloudinary upload
+                { public_id: fileName, folder:'UserAvatar' }, // Options for Cloudinary upload, dont forget the folder
                 async (error, result) => {
                     if (error) {
                         return next({name: "Bad Request", message:error}); // Pass the error to the Express error handler
@@ -105,27 +105,35 @@ class ProfileController {
                     }
 
                     //Checking registered user
-                    
                     const user = await Checking.userValidity(id)
                     if(!user) {
                         next({name: "Not Found", message: 'User Not Found'})
                         return
                     }
                     
-                    //Checking if user already has avatar url, destroy existing 
+                    // Checking if user already has avatar url, destroy existing 
                     let lastProfileImgUrl = user.Profile.avatar
                     if(lastProfileImgUrl) {
+                        //get specific public_id to delete
                         let publicId = MyFunction.getImagePublicId(lastProfileImgUrl)
                         cloudinary.uploader.destroy(publicId)
                     }
 
-                    const cropPic = cloudinary.url(fileName   , {
-                        crop: 'auto',
-                        gravity: 'auto',
-                        width: 500,
-                        height: 500,
-                    });
-                    
+                    //transform image
+                    const cropPic = cloudinary.url(result.public_id, //use for get public_id
+                        {transformation: [
+                                {
+                                    crop: 'auto',
+                                    gravity: 'auto',
+                                    width: 500,
+                                    height: 500,
+                                    format: 'auto',
+                                    quality: 'auto'
+                                }
+                            ]
+                        }, 
+                    );
+
                     const profileId = user.Profile.id
                     await Profiles.update({
                         avatar:cropPic
