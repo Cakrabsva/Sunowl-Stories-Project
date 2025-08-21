@@ -29,7 +29,10 @@ module.exports = (sequelize, DataTypes) => {
     rating: DataTypes.FLOAT,
     image_url: DataTypes.TEXT,
     available_slots: DataTypes.INTEGER,
-    departure_date: DataTypes.DATE
+    departure_date: DataTypes.DATE,
+    is_active: DataTypes.BOOLEAN,
+    min_slots: DataTypes.INTEGER,
+    max_slots: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'OpenTrips',
