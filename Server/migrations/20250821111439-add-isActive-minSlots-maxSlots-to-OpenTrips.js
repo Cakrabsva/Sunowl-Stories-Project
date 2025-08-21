@@ -14,6 +14,17 @@ module.exports = {
       defaultValue: true,
       allowNull: false,
     });
+    
+    await queryInterface.addColumn('OpenTrips', 'TripCategoryId', {
+      type: Sequelize.INTEGER,
+      references: {
+        model: 'TripCategories',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+      allowNull: true,
+    });
 
     await queryInterface.addColumn('OpenTrips', 'min_slots', {
       type: Sequelize.INTEGER,
@@ -38,5 +49,6 @@ module.exports = {
     await queryInterface.removeColumn('OpenTrips', 'is_active');
     await queryInterface.removeColumn('OpenTrips', 'min_slots');
     await queryInterface.removeColumn('OpenTrips', 'max_slots');
+    await queryInterface.removeColumn('OpenTrips', 'TripCategoryId');
   }
 };
