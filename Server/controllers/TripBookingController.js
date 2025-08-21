@@ -32,7 +32,7 @@ class TripBookingController {
             //Checking if user already booking trip
             const alreadyBooking = user.TripBookings && user.TripBookings.some(booking => booking.UserId === id)
             if (alreadyBooking) {
-                next({name: "Conflict", message: 'You can only review 1 time'})
+                next({name: "Conflict", message: 'You can only Bookings 1 time'})
                 return
             }
 
