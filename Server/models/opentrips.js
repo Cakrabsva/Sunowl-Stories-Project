@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
       OpenTrips.hasMany(models.TripImages, {foreignKey:'OpenTripId'})
       OpenTrips.hasMany(models.TripReviews, {foreignKey:'OpenTripId'})
       OpenTrips.hasMany(models.TripBookings, {foreignKey:'OpenTripId'})
+      OpenTrips.hasMany(models.TripDates, {foreignKey:'OpenTripId'})
+      OpenTrips.hasMany(models.TripCategories, {foreignKey:'OpenTripId'})
     }
   }
   OpenTrips.init({
