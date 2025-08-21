@@ -9,15 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      OpenTripId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'OpenTrips',
-          key: 'id'
-        },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE'
-      },
       category_name: {
         type: Sequelize.STRING
       },
@@ -32,6 +23,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('TripCategories');
+    await queryInterface.dropTable('TripCategories', { cascade: true });
   }
 };
