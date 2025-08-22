@@ -2,9 +2,44 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const { TripReviews, OpenTrips } = require('../models');
+const { TripReviews, Users, Profiles, OpenTrips } = require('../models');
 
 class TripReviewController {
+    static async getAllTripReviews (req, res, next) {
+        try {
+            const {id, OpenTripId} = req.params
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || id === ':id') {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking registered user
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: "Not Found", message: 'User Not Found'})
+                return
+            }
+
+            //Getting all trip reviews
+            const tripReviews = await TripReviews.findAll({
+                where: { OpenTripId },
+                include: [
+                    { 
+                        model: Users,
+                        include: [{ model: Profiles }]
+                    }
+                ]
+            })
+            res.status(200).json({message: 'You get all the trip reviews', data:  tripReviews})
+        } catch (err) {
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
     static async createTripReview (req, res, next) {
         try {
             const {rating, review_text} = req.body
