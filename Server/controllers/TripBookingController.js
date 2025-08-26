@@ -7,7 +7,8 @@ const { TripBookings, OpenTrips, Users } = require('../models');
 class TripBookingController {
     static async createTripBooking (req, res, next) {
         try {
-            const {id, OpenTripId, tripBookingId} = req.params
+            const {id, OpenTripId} = req.params
+            const {TripDateId} = req.body
 
             //Checking UUID Validity
             if(!validator.isUUID(id) || id === ':id') {
@@ -36,31 +37,34 @@ class TripBookingController {
                 return
             }
 
-            //Defined form
-            const form = {
+            //Checking TripDateId is defined
+            if(!TripDateId) {
+                next({name: "Bad Request", message: 'Please Choose your trip depature date'})
+                return
+            }
+
+            //Defined TripBooking form
+            const tripBookingForm = {
                 UserId:id, 
                 OpenTripId,
                 pax_count: 1,
                 total_price: openTripsData.price,
                 status: 'pending',
-                booked_at: new Date ()
+                booked_at: new Date (),
+                TripDateId
             }
 
             //Checking mandatory form data
-            for (let key in form) {
-                if(!form[key]) {
+            for (let key in tripBookingForm) {
+                if(!tripBookingForm[key]) {
                     next({name: 'Bad Request', message: `please insert ${key}` })
                     return
                 }
             }
 
-            //Process creating Trip Itinerary
-            await TripBookings.create(form)
-            await OpenTrips.update(
-                { available_slots: openTripsData.available_slots - 1 },
-                { where: { id: OpenTripId } }
-            )
-            res.status(201).json({message: `Trip Review Posted`})
+            //Process creating TripBooking
+            await TripBookings.create(tripBookingForm)
+            res.status(201).json({message: `Trip Booking Successfully`})
 
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
@@ -102,14 +106,7 @@ class TripBookingController {
 
             //Deleting Process
             await TripBookings.destroy({where:{id:tripBookingId}})
-
-            //Update available slots in Open Trips
-            const openTripData = await OpenTrips.findByPk(OpenTripId)
-            await OpenTrips.update(
-                { available_slots: openTripData.available_slots + 1 },
-                { where: { id: OpenTripId } }
-            )
-            res.status(200).json({message: `Booking has been deleted`})
+            res.status(200).json({message: `Trip Booking has been deleted`})
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||

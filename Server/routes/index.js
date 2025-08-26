@@ -9,5 +9,6 @@ router.use('/tripbooking', require('./tripBookingRouters'))
 router.use('/tripreview', require('./tripReviewRouters'))
 router.use('/tripimage', require('./tripImageRouters'))
 router.use('/tripitinerary', require('./tripItineraryRouters'))
+router.use('/tripdate', require('./tripDateRouters'))
 
 module.exports = router
