@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       TripBookings.belongsTo(models.OpenTrips, { foreignKey: 'OpenTripId' });
       TripBookings.belongsTo(models.Users, { foreignKey: 'UserId' });
+      TripBookings.belongsTo(models.TripDates, {foreignKey:'TripDateId'})
     }
   }
   TripBookings.init({

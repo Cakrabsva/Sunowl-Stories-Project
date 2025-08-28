@@ -2,13 +2,45 @@
 
 const validator = require('validator');
 const Checking = require('../helpers/MyValidator');
-const { TripBookings, OpenTrips, Users } = require('../models');
+const { TripBookings, OpenTrips, Users, TripDates } = require('../models');
 
 class TripBookingController {
+    static async getMyTripBookings (req, res, next) {
+        try {
+            const {id} = req.params
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || id === ':id') {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking registered user
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: "Not Found", message: 'User Not Found'})
+                return
+            }
+
+            //Getting all trip reviews
+            const tripBookings = await TripBookings.findAll({
+                where: { UserId: id },
+                include: [
+                    { model: OpenTrips, as: 'OpenTrip' },
+                    { model: TripDates, as: 'TripDate' }
+                ]
+            })
+            res.status(200).json({message: 'You get all the trip reviews', data:  tripBookings})
+        } catch (err) {
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
     static async createTripBooking (req, res, next) {
         try {
-            const {id, OpenTripId} = req.params
-            const {TripDateId} = req.body
+            const {id, OpenTripId, TripDateId} = req.params
 
             //Checking UUID Validity
             if(!validator.isUUID(id) || id === ':id') {

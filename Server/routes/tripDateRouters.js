@@ -2,7 +2,6 @@
 
 const router = require('express').Router()
 const TripDatesController = require('../controllers/tripDatesController')
-const tripReviewController = require('../controllers/TripReviewsController')
 const Permission = require('../helpers/Permission')
 
 router.get('/:id/:OpenTripId/get-all-tripDates',Permission.userAuthentication, Permission.userAuthorization,TripDatesController.getAllTripDates)
