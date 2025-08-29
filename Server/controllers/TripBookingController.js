@@ -29,7 +29,36 @@ class TripBookingController {
                     { model: TripDates, as: 'TripDate' }
                 ]
             })
-            res.status(200).json({message: 'You get all the trip reviews', data:  tripBookings})
+            res.status(200).json({message: 'You get all the trip Booking', data:  tripBookings})
+        } catch (err) {
+            err.name === 'SequelizeValidationError' || 
+            err.name === 'SequelizeUniqueConstraintError' ||
+            err.name === 'SequelizeDatabaseError' ?
+            next({name: err.name, message: err.errors[0].message}) : next(err)
+        }
+    }
+
+    static async getOpenTripBookings (req, res, next) {
+        try {
+            const {id, OpenTripId} = req.params
+            //Checking UUID Validity
+            if(!validator.isUUID(id) || id === ':id') {
+                next({name: 'Bad Request', message: 'Invalid or missing UUID' })
+                return 
+            }
+
+            //Checking registered user
+            const user = await Checking.userValidity(id)
+            if(!user) {
+                next({name: "Not Found", message: 'User Not Found'})
+                return
+            }
+
+            //Getting all trip reviews
+            const tripBookings = await TripBookings.findAll({
+                where: {OpenTripId},
+            })
+            res.status(200).json({message: 'You get all the trip Booking', data:  tripBookings})
         } catch (err) {
             err.name === 'SequelizeValidationError' || 
             err.name === 'SequelizeUniqueConstraintError' ||
@@ -63,11 +92,11 @@ class TripBookingController {
             }
 
             //Checking if user already booking trip
-            const alreadyBooking = user.TripBookings && user.TripBookings.some(booking => booking.UserId === id)
-            if (alreadyBooking) {
-                next({name: "Conflict", message: 'You can only Bookings 1 time'})
-                return
-            }
+            // const alreadyBooking = user.TripBookings && user.TripBookings.some(booking => booking.UserId === id)
+            // if (alreadyBooking) {
+            //     next({name: "Conflict", message: 'You can only Bookings 1 time'})
+            //     return
+            // }
 
             //Checking TripDateId is defined
             if(!TripDateId) {
